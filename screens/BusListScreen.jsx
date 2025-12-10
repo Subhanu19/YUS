@@ -184,6 +184,7 @@ export default function BusListScreen() {
       stop: searchType === "srcDestStop" ? stop : null,
     });
   };
+const isKCET = (name) => name?.toLowerCase() === "kcet";
 
   // ----- Render bus card -----
   const renderBusCard = ({ item }) => {
@@ -219,10 +220,25 @@ export default function BusListScreen() {
         <View style={styles.pathRow}>
           <View style={styles.pathGraphic}>
             <View style={styles.iconWithLabel}>
-              {/* <MaterialIcons name="home" size={35} color="#E07B39" /> */}
-              <MaterialCommunityIcons name="bus-stop-uncovered" size={40} color={GOLD_START} />
-              <Text style={styles.stopLabel}>{item.stops?.[0]?.location_name}</Text>
-            </View>
+  {isKCET(item.stops?.[0]?.location_name) ? (
+    <MaterialCommunityIcons
+      name="school"
+      size={40}
+      color={GOLD_START}
+    />
+  ) : (
+    <MaterialCommunityIcons
+      name="bus-stop-uncovered"
+      size={40}
+      color={GOLD_START}
+    />
+  )}
+
+  <Text style={styles.stopLabel}>
+    {item.stops?.[0]?.location_name}
+  </Text>
+</View>
+
 
             <View style={styles.dottedLine} />
 
@@ -231,12 +247,25 @@ export default function BusListScreen() {
             <View style={styles.dottedLine} />
 
             <View style={styles.iconWithLabel}>
-            <MaterialCommunityIcons name="school" size={30} color={GOLD_START}  marginTop="20" />
+  {isKCET(item.stops?.[item.stops.length - 1]?.location_name) ? (
+    <MaterialCommunityIcons
+      name="school"
+      size={30}
+      color={GOLD_START}
+      style={{ marginTop: 20 }}
+    />
+  ) : <MaterialCommunityIcons
+      name="bus-stop-uncovered"
+      size={30}
+      color={GOLD_START}
+      style={{ marginTop: 10 }}
+    />}
 
-              <Text style={styles.stopLabel}>
-                {item.stops?.[item.stops.length - 1]?.location_name}
-              </Text>
-            </View>
+  <Text style={styles.stopLabel}>
+    {item.stops?.[item.stops.length - 1]?.location_name}
+  </Text>
+</View>
+
           </View>
         </View>
       </Pressable>
