@@ -18,6 +18,7 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 
+
 // Helper to calculate distance (Haversine formula)
 function getDistance(lat1, lon1, lat2, lon2) {
   const toRad = (x) => (x * Math.PI) / 180;
@@ -230,7 +231,8 @@ export default function BusListScreen() {
             <View style={styles.dottedLine} />
 
             <View style={styles.iconWithLabel}>
-              <MaterialCommunityIcons name="account-school" size={35} style={{ marginTop: 7 }} />
+            <MaterialCommunityIcons name="school" size={30} color={GOLD_START}  marginTop="20" />
+
               <Text style={styles.stopLabel}>
                 {item.stops?.[item.stops.length - 1]?.location_name}
               </Text>
