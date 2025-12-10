@@ -1,13 +1,13 @@
 // screens/SplashScreen.js
 import React, { useEffect, useRef } from "react";
-import { View, StyleSheet, Animated, useWindowDimensions } from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
+
 
 export default function SplashScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -46,7 +46,7 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  const styles = createStyles(theme, SCREEN_WIDTH, SCREEN_HEIGHT);
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
@@ -77,7 +77,7 @@ export default function SplashScreen() {
   );
 }
 
-const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
+const createStyles = (theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -86,19 +86,19 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
       alignItems: "center",
     },
     logo: {
-      width: SCREEN_WIDTH * 0.55, // 55% of screen width
-      height: SCREEN_HEIGHT * 0.3, // 30% of screen height
-      marginBottom: SCREEN_HEIGHT * 0.03,
+      width: 220,
+      height: 230,
+      marginBottom: 20,
       resizeMode: "contain",
     },
     title: {
-      fontSize: SCREEN_WIDTH * 0.075, // 7.5% of screen width
+      fontSize: 30,
       fontWeight: "bold",
       color: theme.GOLD_START,
-      marginBottom: SCREEN_HEIGHT * 0.008,
+      marginBottom: 6,
     },
     subtitle: {
-      fontSize: SCREEN_WIDTH * 0.035, // 3.5% of screen width
+      fontSize: 14,
       color: theme.textLight,
       fontStyle: "italic",
     },

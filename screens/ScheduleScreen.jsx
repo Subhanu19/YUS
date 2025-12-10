@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   FlatList,
   Platform,
-  useWindowDimensions,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import webSocketService from "../services/WebSocketService";
@@ -16,6 +15,7 @@ import { useTheme } from "../context/ThemeContext";
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 // ====== Constants ======
+const ITEM_HEIGHT = 120;
 const DISTANCE_THRESHOLD_METERS = 1000; // above this show km else meters
 const STOP_REACHED_THRESHOLD_METERS = 50; // 50 meters threshold for "reached"
 
@@ -153,14 +153,9 @@ const formatStaticTime = (timeStr, isUpRoute) => {
 export default function ScheduleScreen() {
   const route = useRoute();
   const { theme } = useTheme();
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const { busObject } = route.params || {};
 
-  // Responsive constants based on screen size
-  const ITEM_HEIGHT = SCREEN_HEIGHT * 0.18; // Responsive item height
-  const BUS_ICON_SIZE = SCREEN_WIDTH * 0.08; // Responsive bus icon size
-  
-  const styles = createStyles(theme, SCREEN_WIDTH, SCREEN_HEIGHT, ITEM_HEIGHT);
+  const styles = createStyles(theme);
 
   const [busData, setBusData] = useState(busObject || { stops: [] });
   const [loading, setLoading] = useState(!busObject?.stops?.length);
@@ -709,7 +704,7 @@ export default function ScheduleScreen() {
 }
 
 // ===== Styles =====
-const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT, ITEM_HEIGHT) =>
+const createStyles = (theme) =>
   StyleSheet.create({
     container: { 
       flex: 1, 
@@ -722,28 +717,28 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT, ITEM_HEIGHT) =>
       backgroundColor: theme.background,
     },
     loadingText: { 
-      marginTop: SCREEN_HEIGHT * 0.02,
-      fontSize: SCREEN_WIDTH * 0.04, 
+      marginTop: 16, 
+      fontSize: 16, 
       fontWeight: "500" 
     },
     headerSection: {
-      padding: SCREEN_HEIGHT * 0.05,
+      padding: 50,
       zIndex: 100,
-      paddingBottom: SCREEN_HEIGHT * 0.02,
+      paddingBottom: 16,
       borderBottomWidth: 1,
       borderBottomColor: theme.GOLD_START,
     },
     title: {
-      fontSize: SCREEN_WIDTH * 0.06,
+      fontSize: 24,
       fontWeight: "800",
       color: theme.BLACK,
-      marginBottom: SCREEN_HEIGHT * 0.005,
+      marginBottom: 4,
       textAlign: "center",
     },
     subtitle: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       color: theme.BLACK,
-      marginBottom: SCREEN_HEIGHT * 0.02,
+      marginBottom: 16,
       textAlign: "center",
       fontWeight: "500",
       opacity: 0.9,
@@ -754,8 +749,8 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT, ITEM_HEIGHT) =>
       backgroundColor: theme.background,
     },
     listContent: { 
-      padding: SCREEN_WIDTH * 0.04, 
-      paddingBottom: SCREEN_HEIGHT * 0.12 
+      padding: 16, 
+      paddingBottom: 100 
     },
     stopContainer: {
       flexDirection: "row",
@@ -763,28 +758,28 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT, ITEM_HEIGHT) =>
       height: ITEM_HEIGHT,
     },
     timeline: { 
-      width: SCREEN_WIDTH * 0.1, 
+      width: 40, 
       alignItems: "center", 
       justifyContent: "flex-start" 
     },
     fullLine: {
       position: "absolute",
-      top: SCREEN_HEIGHT * 0.01,
-      width: SCREEN_WIDTH * 0.005,
+      top: 8,
+      width: 2,
       height: "100%",
       backgroundColor: "#fff",
     },
     progressLine: {
       position: "absolute",
-      top: SCREEN_HEIGHT * 0.01,
-      width: SCREEN_WIDTH * 0.005,
+      top: 8,
+      width: 2,
       backgroundColor: theme.accent,
     },
     circle: {
-      width: SCREEN_WIDTH * 0.04,
-      height: SCREEN_WIDTH * 0.04,
-      borderRadius: SCREEN_WIDTH * 0.02,
-      marginVertical: SCREEN_HEIGHT * 0.008,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      marginVertical: 5,
       zIndex: 1,
     },
     contentContainer: {
@@ -793,112 +788,112 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT, ITEM_HEIGHT) =>
       alignItems: "center",
     },
     etaSection: {
-      width: SCREEN_WIDTH * 0.2,
+      width: 80,
       alignItems: "flex-start",
-      paddingRight: SCREEN_WIDTH * 0.03,
+      paddingRight: 12,
     },
     etaText: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       fontWeight: "700",
-      marginBottom: SCREEN_HEIGHT * 0.005,
+      marginBottom: 4,
     },
     delayText: {
-      fontSize: SCREEN_WIDTH * 0.028,
+      fontSize: 11,
       fontWeight: "500",
     },
     stopDetails: {
       flex: 1,
       justifyContent: "center",
       borderBottomWidth: 1,
-      paddingBottom: SCREEN_HEIGHT * 0.02,
+      paddingBottom: 16,
     },
     stopHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: SCREEN_HEIGHT * 0.01,
+      marginBottom: 8,
     },
     stopName: {
-      fontSize: SCREEN_WIDTH * 0.04,
+      fontSize: 16,
       fontWeight: "700",
       flex: 1,
     },
     activeBadge: {
-      paddingHorizontal: SCREEN_WIDTH * 0.02,
-      paddingVertical: SCREEN_HEIGHT * 0.005,
-      borderRadius: SCREEN_WIDTH * 0.03,
-      marginLeft: SCREEN_WIDTH * 0.02,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      marginLeft: 8,
     },
     activeBadgeText: {
       color: theme.secondary,
-      fontSize: SCREEN_WIDTH * 0.025,
+      fontSize: 10,
       fontWeight: "800",
     },
     reachedBadge: {
-      marginLeft: SCREEN_WIDTH * 0.02,
-      paddingHorizontal: SCREEN_WIDTH * 0.02,
-      paddingVertical: SCREEN_HEIGHT * 0.005,
-      borderRadius: SCREEN_WIDTH * 0.02,
+      marginLeft: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
     },
     reachedBadgeText: {
       color: theme.secondary,
       fontWeight: "700",
-      fontSize: SCREEN_WIDTH * 0.028,
+      fontSize: 11,
     },
     scheduleSection: {},
     timeRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: SCREEN_HEIGHT * 0.005,
+      marginBottom: 4,
     },
     timeLabel: {
-      fontSize: SCREEN_WIDTH * 0.032,
+      fontSize: 13,
       fontWeight: "500",
-      width: SCREEN_WIDTH * 0.18,
+      width: 70,
     },
     time: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       fontWeight: "600",
     },
     busIconContainer: {
-      width: SCREEN_WIDTH * 0.08,
-      height: SCREEN_WIDTH * 0.08,
-      borderRadius: SCREEN_WIDTH * 0.04,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       justifyContent: "center",
       alignItems: "center",
     },
     busEmoji: { 
-      fontSize: SCREEN_WIDTH * 0.04 
+      fontSize: 16 
     },
     footer: {
-      padding: SCREEN_WIDTH * 0.04,
+      padding: 16,
       borderTopWidth: 1,
     },
     locationTitle: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       fontWeight: "700",
-      marginBottom: SCREEN_HEIGHT * 0.005,
+      marginBottom: 4,
     },
     locationText: {
-      fontSize: SCREEN_WIDTH * 0.03,
-      marginBottom: SCREEN_HEIGHT * 0.01,
+      fontSize: 12,
+      marginBottom: 8,
       fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     },
     connectionStatus: {
-      fontSize: SCREEN_WIDTH * 0.03,
+      fontSize: 12,
       fontWeight: "500",
     },
     busLayer: {
       position: "absolute",
       top: 0,
-      left: SCREEN_WIDTH * 0.05,
+      left: 20,
       right: 0,
       bottom: 0,
     },
     busMovingContainer: {
       position: "absolute",
       left: 0,
-      top: SCREEN_HEIGHT * 0.02,
+      top: 16,
       zIndex: 10,
     },
   });

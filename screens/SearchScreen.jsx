@@ -1,7 +1,7 @@
 // Image URL (uploaded file):
 // /mnt/data/WhatsApp Image 2025-11-23 at 6.36.05 PM.jpeg
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, act } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,6 @@ import {
   Animated,
   Modal,
   Dimensions,
-  useWindowDimensions,
 } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import LightTheme from "../constants/Colours";
@@ -25,13 +24,16 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const DRAWER_WIDTH = SCREEN_WIDTH * 0.75;
+
 export default function SearchScreen() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const theme = LightTheme;
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
-  const DRAWER_WIDTH = SCREEN_WIDTH * 0.75;
-  const styles = createStyles(theme, SCREEN_WIDTH, SCREEN_HEIGHT);
+  const styles = createStyles(theme);
+
 
 const AnimatedHamburger = ({ onPress, isOpen, style }) => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -653,7 +655,7 @@ const fetchCurrentRoutes = async () => {
       <View
         style={{
           backgroundColor: "#ffffff",
-          padding: SCREEN_WIDTH * 0.04, // Responsive padding
+          padding: 15,
           borderRadius: 22,
           shadowColor: "#000",
           shadowOpacity: 0.08,
@@ -665,29 +667,30 @@ const fetchCurrentRoutes = async () => {
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
           <View
             style={{
-              height: SCREEN_WIDTH * 0.12, // Responsive size
-              width: SCREEN_WIDTH * 0.12,
-              borderRadius: (SCREEN_WIDTH * 0.12) / 2,
+              height: 48,
+              width: 48,
+              borderRadius: 24,
               backgroundColor: "#efe2ca",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Ionicons name="search" size={SCREEN_WIDTH * 0.055} color="#000" />
+            <Ionicons name="search" size={22} color="#000" />
           </View>
 
-          <View style={{ marginLeft: SCREEN_WIDTH * 0.03 }}>
-            <Text style={{ fontSize: SCREEN_WIDTH * 0.05, fontWeight: "700", color: "#000" }}>Spot Bus</Text>
-            <Text style={{ fontSize: SCREEN_WIDTH * 0.03, color: "#777" }}>Track by bus number</Text>
+          <View style={{ marginLeft: 12 }}>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>Spot Bus</Text>
+            <Text style={{ fontSize: 12, color: "#777" }}>Track by bus number</Text>
           </View>
         </View>
 
         <View
+
           style={{
             borderWidth: 3,
             borderColor: "#e6b645",
             borderRadius: 15,
-            paddingVertical: SCREEN_WIDTH * 0.045,
+            paddingVertical: 19,
             alignItems: "center",
             backgroundColor: "#fff",
             marginBottom: 10,
@@ -695,7 +698,7 @@ const fetchCurrentRoutes = async () => {
         >
           <TextInput
             style={{
-              fontSize: SCREEN_WIDTH * 0.07,
+              fontSize: 28,
               fontWeight: "800",
               color: "#555",
               textAlign: "center",
@@ -711,13 +714,14 @@ const fetchCurrentRoutes = async () => {
           />
         </View>
 
-        <Text style={{ textAlign: "center", color: "#888", fontSize: SCREEN_WIDTH * 0.025 }}>
+        <Text style={{ textAlign: "center", color: "#888", fontSize: 10 }}>
           ENTER BUS NUMBER
         </Text>
       </View>
      { renderSearchButton()}
     </View>
   );
+
 
 const renderSearchBySourceDest = () => (
   <View style={{ marginBottom: 20, position: "relative", zIndex: 1 }}>
@@ -726,7 +730,7 @@ const renderSearchBySourceDest = () => (
     <View
       style={{
         backgroundColor: "#ffffff",
-        padding: SCREEN_WIDTH * 0.04,
+        padding: 15,
         borderRadius: 22,
         shadowColor: "#000",
         shadowOpacity: 0.08,
@@ -742,20 +746,20 @@ const renderSearchBySourceDest = () => (
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
         <View
           style={{
-            height: SCREEN_WIDTH * 0.12,
-            width: SCREEN_WIDTH * 0.12,
-            borderRadius: (SCREEN_WIDTH * 0.12) / 2,
+            height: 48,
+            width: 48,
+            borderRadius: 24,
             backgroundColor: "#efe2ca",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Ionicons name="search" size={SCREEN_WIDTH * 0.055} color="#000" />
+          <Ionicons name="search" size={22} color="#000" />
         </View>
 
-        <View style={{ marginLeft: SCREEN_WIDTH * 0.03 }}>
-          <Text style={{ fontSize: SCREEN_WIDTH * 0.05, fontWeight: "700", color: "#000" }}>Plan Your Journey</Text>
-          <Text style={{ fontSize: SCREEN_WIDTH * 0.03, color: "#777" }}>Find buses by route</Text>
+        <View style={{ marginLeft: 12 }}>
+          <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>Plan Your Journey</Text>
+          <Text style={{ fontSize: 12, color: "#777" }}>Find buses by route</Text>
         </View>
       </View>
 
@@ -763,21 +767,21 @@ const renderSearchBySourceDest = () => (
       <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
         
         {/* FROM */}
-        <View style={{ flex: 1, marginRight: SCREEN_WIDTH * 0.025, position: "relative", zIndex: 200 }}>
-          <Text style={{ color: "#888", fontSize: SCREEN_WIDTH * 0.03, marginBottom: 6 }}>FROM</Text>
+        <View style={{ flex: 1, marginRight: 10, position: "relative", zIndex: 200 }}>
+          <Text style={{ color: "#888", fontSize: 12, marginBottom: 6 }}>FROM</Text>
 
           <View
             style={{
               borderWidth: 3,
               borderColor: "#e6b645",
               borderRadius: 18,
-              paddingVertical: SCREEN_WIDTH * 0.04,
-              paddingHorizontal: SCREEN_WIDTH * 0.035,
+              paddingVertical: 16,
+              paddingHorizontal: 14,
               backgroundColor: "#fff",
             }}
           >
             <TextInput
-              style={{ fontSize: SCREEN_WIDTH * 0.04, fontWeight: "600", color: "#555" }}
+              style={{ fontSize: 16, fontWeight: "600", color: "#555" }}
               placeholder="Source"
               placeholderTextColor="#b0b0b0"
               value={source}
@@ -790,31 +794,32 @@ const renderSearchBySourceDest = () => (
             <View
               style={{
                 position: "absolute",
-                top: SCREEN_WIDTH * 0.25,
+                top: 100,
                 left: 0,
                 right: 0,
                 backgroundColor: "#fff",
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: "#ddd",
-                maxHeight: SCREEN_HEIGHT * 0.3,
-                width: SCREEN_WIDTH * 1.5,
-                zIndex: 200,
+                maxHeight: 300,
+                width: "150%", 
+                maxWidth:1000,
+                zIndex: 200, // << SUPER IMPORTANT
                 elevation: 20,
-                marginLeft: -SCREEN_WIDTH * 0.05,
+                marginLeft:-20,
               }}
             >
               <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                 {sourceSuggestions.map((item, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={{ padding: SCREEN_WIDTH * 0.03, borderBottomWidth: 1, borderColor: "#eee" }}
+                    style={{ padding: 12, borderBottomWidth: 1, borderColor: "#eee" }}
                     onPress={() => {
                       setSource(item);
                       setSourceSuggestions([]);
                     }}
                   >
-                    <Text style={{ color: "#555", padding: SCREEN_WIDTH * 0.012 }}>{item}</Text>
+                    <Text style={{ color: "#555" ,padding:5}}>{item}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -823,28 +828,28 @@ const renderSearchBySourceDest = () => (
         </View>
 
         {/* ARROW */}
-        <View style={{ width: SCREEN_WIDTH * 0.12, height: SCREEN_WIDTH * 0.3, justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ fontSize: SCREEN_WIDTH * 0.085, fontWeight: "900", color: "#444", marginTop: -5 }}>
+        <View style={{ width: 50, height: 125, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ fontSize: 34, fontWeight: "900", color: "#444", marginTop: -5 }}>
             {">>"}
           </Text>
         </View>
 
         {/* TO */}
-        <View style={{ flex: 1, marginLeft: SCREEN_WIDTH * 0.025, position: "relative", zIndex: 200 }}>
-          <Text style={{ color: "#888", fontSize: SCREEN_WIDTH * 0.03, marginBottom: 6 }}>TO</Text>
+        <View style={{ flex: 1, marginLeft: 10, position: "relative", zIndex: 200 }}>
+          <Text style={{ color: "#888", fontSize: 12, marginBottom: 6 }}>TO</Text>
 
           <View
             style={{
               borderWidth: 3,
               borderColor: "#e6b645",
               borderRadius: 18,
-              paddingVertical: SCREEN_WIDTH * 0.04,
-              paddingHorizontal: SCREEN_WIDTH * 0.035,
+              paddingVertical: 16,
+              paddingHorizontal: 14,
               backgroundColor: "#fff",
             }}
           >
             <TextInput
-              style={{ fontSize: SCREEN_WIDTH * 0.04, fontWeight: "600", color: "#555" }}
+              style={{ fontSize: 16, fontWeight: "600", color: "#555" }}
               placeholder="Destination"
               placeholderTextColor="#b0b0b0"
               value={destination}
@@ -857,31 +862,32 @@ const renderSearchBySourceDest = () => (
             <View
               style={{
                 position: "absolute",
-                top: SCREEN_WIDTH * 0.25,
+                top: 100,
                 left: 0,
                 right: 0,
                 backgroundColor: "#fff",
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: "#ddd",
-                maxHeight: SCREEN_HEIGHT * 0.3,
-                width: SCREEN_WIDTH * 1.5,
-                zIndex: 200,
+                maxHeight: 300,
+                width: "150%", 
+                maxWidth:1000,
+                zIndex: 200,  // << SUPER IMPORTANT
                 elevation: 20,
-                marginLeft: -SCREEN_WIDTH * 0.11,
+                marginLeft:-45,
               }}
             >
               <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                 {destinationSuggestions.map((item, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={{ padding: SCREEN_WIDTH * 0.03, borderBottomWidth: 1, borderColor: "#eee" }}
+                    style={{ padding: 12, borderBottomWidth: 1, borderColor: "#eee" }}
                     onPress={() => {
                       setDestination(item);
                       setDestinationSuggestions([]);
                     }}
                   >
-                    <Text style={{ color: "#555", padding: SCREEN_WIDTH * 0.012 }}>{item}</Text>
+                    <Text style={{ color: "#555" ,padding:5}}>{item}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -896,7 +902,7 @@ const renderSearchBySourceDest = () => (
       style={{
         transform: [{ scale: buttonScale }],
         marginTop: 20,
-        zIndex: -1,
+        zIndex: -1, // << KEEP BUTTON BEHIND EVERYTHING
       }}
     >
       <TouchableOpacity
@@ -911,12 +917,13 @@ const renderSearchBySourceDest = () => (
           style={styles.searchButtonGradient}
         >
           <Text style={styles.searchButtonText}>Find Buses</Text>
-          <Ionicons name="rocket" size={SCREEN_WIDTH * 0.045} color="#000" style={{ marginLeft: 8 }} />
+          <Ionicons name="rocket" size={18} color="#000" style={{ marginLeft: 8 }} />
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   </View>
 );
+
 
   const renderSearchButton = () => (
     <Animated.View style={{ transform: [{ scale: buttonScale }] ,zIndex : 1, position:"relative"}}>
@@ -932,7 +939,7 @@ const renderSearchBySourceDest = () => (
           style={styles.searchButtonGradient}
         >
           <Text style={styles.searchButtonText}>Find Buses</Text>
-          <Ionicons name="rocket" size={SCREEN_WIDTH * 0.045} color="#000" style={{ marginLeft: 8 }} />
+          <Ionicons name="rocket" size={18} color="#000" style={{ marginLeft: 8 }} />
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
@@ -955,7 +962,7 @@ const renderSearchBySourceDest = () => (
   );
 }
 
-const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
+const createStyles = (theme) => {
   const GOLD_START = "#edae25ff";
   const GOLD_END = "#f1b21a";
   const GOLD_DARK = "#c98a00";
@@ -969,22 +976,22 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
     },
     scrollContainer: {
       flexGrow: 1,
-      padding: SCREEN_WIDTH * 0.05,
-      paddingTop: SCREEN_HEIGHT * 0.08,
+      padding: 20,
+      paddingTop: 60,
     },
     headerSection: {
-      marginBottom: SCREEN_HEIGHT * 0.03,
+      marginBottom: 26,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      zIndex: 9999,
-      elevation: 15,
-      position: "relative",
+       zIndex: 9999,   // ⭐ VERY IMPORTANT
+  elevation: 15,  // for Android
+  position: "relative",
     },
     hamburgerButton: {
-      width: SCREEN_WIDTH * 0.11,
-      height: SCREEN_WIDTH * 0.11,
-      borderRadius: SCREEN_WIDTH * 0.055,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: '#fff',
       alignItems: 'center',
       justifyContent: 'center',
@@ -992,32 +999,33 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
-      zIndex: 99999,
-      elevation: 20,
-      position: "absolute", 
+      // elevation: 3,
+        zIndex: 99999,      // ⭐ TOP OF EVERYTHING
+  elevation: 20,      // ⭐ ANDROID
+   position: "absolute", 
     },
     toggle: {
-      width: SCREEN_WIDTH * 0.1,
-      height: SCREEN_WIDTH * 0.1,
+      width: 40,
+      height: 40,
       justifyContent: "center",
       alignItems: "center",
-      gap: SCREEN_WIDTH * 0.015,
+      gap: 6,
     },
     bar: {
-      width: SCREEN_WIDTH * 0.07,
-      height: SCREEN_WIDTH * 0.0075,
-      backgroundColor: "#D4A53A",
+      width: 28,
+      height: 3,
+      backgroundColor: "#D4A53A", // Changed to match your gold theme
       borderRadius: 3,
     },
     barSmall: {
-      width: SCREEN_WIDTH * 0.05,
+      width: 20, // 70%
     },
     headerTitleContainer: {
       flex: 1,
       alignItems: 'center',
     },
     headerTitle: {
-      fontSize: SCREEN_WIDTH * 0.06,
+      fontSize: 24,
       fontWeight: '900',
       color: '#D4A53A',
       textAlign: "left",
@@ -1026,7 +1034,7 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
     drawerOverlay: {
       flex: 1,
       flexDirection: 'row',
-      zIndex: 1,
+      zIndex: 1,         // ⭐ LOWER THAN HEADER
       elevation: 1,
     },
     drawerBackdrop: {
@@ -1035,32 +1043,33 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       position: "absolute",
     },
     drawerContainer: {
-      width: SCREEN_WIDTH * 0.75,
+      width: DRAWER_WIDTH,
       height: '100%',
       position: 'absolute',
       left: 0,
       top: 0,  
       zIndex: 2,
       elevation: 2,
+
     },
     drawerContent: {
       flex: 1,
-      backgroundColor: '#fff',
+      backgroundColor: '#fff', // Your theme background color
     },
     drawerHeader: {
       alignItems: 'center',
-      paddingVertical: SCREEN_HEIGHT * 0.03,
-      paddingHorizontal: SCREEN_WIDTH * 0.05,
+      paddingVertical: 25,
+      paddingHorizontal: 20,
       borderBottomWidth: 1,
       borderBottomColor: '#E0E0E0',
     },
     logoContainer: {
-      marginBottom: SCREEN_HEIGHT * 0.02,
+      marginBottom: 16,
     },
     logoCircle: {
-      width: SCREEN_WIDTH * 0.2,
-      height: SCREEN_WIDTH * 0.2,
-      borderRadius: SCREEN_WIDTH * 0.1,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
       backgroundColor: '#fff',
       alignItems: 'center',
       justifyContent: 'center',
@@ -1073,63 +1082,64 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       elevation: 3,
     },
     drawerAppName: {
-      fontSize: SCREEN_WIDTH * 0.07,
+      fontSize: 28,
       fontWeight: '900',
       color: '#D4A53A',
       letterSpacing: 1,
-      marginBottom: SCREEN_HEIGHT * 0.01,
+      marginBottom: 8,
       textAlign: 'center',
     },
     drawerVersion: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       color: '#5A5A5A',
       fontWeight: '600',
       textAlign: 'center',
     },
     drawerMenuSection: {
       flex: 1,
-      paddingVertical: SCREEN_HEIGHT * 0.025,
+      paddingVertical: 20,
     },
     drawerMenuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: SCREEN_HEIGHT * 0.018,
-      paddingHorizontal: SCREEN_WIDTH * 0.06,
+      paddingVertical: 15,
+      paddingHorizontal: 25,
     },
     drawerMenuText: {
-      fontSize: SCREEN_WIDTH * 0.045,
+      fontSize: 18,
       fontWeight: '600',
       color: '#333333',
-      marginLeft: SCREEN_WIDTH * 0.05,
+      marginLeft: 20,
     },
     menuDivider: {
       height: 1,
       backgroundColor: '#E0E0E0',
-      marginVertical: SCREEN_HEIGHT * 0.012,
-      marginHorizontal: SCREEN_WIDTH * 0.06,
+      marginVertical: 10,
+      marginHorizontal: 25,
     },
     drawerFooter: {
-      padding: SCREEN_WIDTH * 0.06,
+      padding: 25,
       alignItems: 'center',
       borderTopWidth: 1,
       borderTopColor: '#E0E0E0',
     },
     drawerFooterText: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       color: '#5A5A5A',
       fontWeight: '500',
       textAlign: 'center',
     },
     searchTypeSection: {
-      marginBottom: SCREEN_HEIGHT * 0.03,
+      marginBottom: 24,
     },
     sectionLabel: {
-      fontSize: SCREEN_WIDTH * 0.038,
+      fontSize: 15,
       fontWeight: "600",
       color: theme.textSecondary,
-      marginBottom: SCREEN_HEIGHT * 0.015,
+      marginBottom: 12,
       textAlign: 'center',
     },
+    // New Radio Switch Styles
     radioSwitchContainer: {
       borderWidth: 2,
       borderColor: GOLD_START,
@@ -1137,7 +1147,7 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       position: 'relative',
       flexDirection: 'row',
       alignItems: 'center',
-      height: SCREEN_HEIGHT * 0.06,
+      height: 50,
       width: '100%',
       overflow: 'hidden',
       backgroundColor: GLASS_BG,
@@ -1145,11 +1155,11 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
     radioBackground: {
       position: 'absolute',
       width: '53%',
-      height: SCREEN_HEIGHT * 0.06,
+      height: 50,
       backgroundColor: GOLD_START,
       top: 2,
-      marginLeft: -SCREEN_WIDTH * 0.025,
-      marginTop: -4,
+      marginLeft:-10,
+      marginTop:-4,
       borderRadius: 5000,
       zIndex: 1,
     },
@@ -1158,17 +1168,17 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: SCREEN_HEIGHT * 0.015,
+      paddingVertical: 12,
       borderRadius: 30,
       position: 'relative',
       overflow: 'hidden',
       zIndex: 2,
     },
     radioIcon: {
-      marginRight: SCREEN_WIDTH * 0.02,
+      marginRight: 8,
     },
     radioLabel: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       fontWeight: "600",
       color: theme.textSecondary,
       letterSpacing: 0.5,
@@ -1177,16 +1187,19 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       color: "#5a3a00",
       fontWeight: "bold",
     },
+    inputSection: {
+      marginBottom: 18,
+    },
     searchButtonOuter: {
       position : "relative",
       zIndex:1,
       borderRadius: 28,
       overflow: "visible",
-      marginTop: SCREEN_HEIGHT * 0.02,
-      marginBottom: SCREEN_HEIGHT * 0.035,
+      marginTop: 14,
+      marginBottom: 28,
       alignSelf: "center",
       width: "100%",
-      maxWidth: SCREEN_WIDTH * 0.9,
+      maxWidth: 420,
       shadowColor: GOLD_DARK,
       shadowOffset: { width: 0, height: 10 },
       shadowOpacity: 0.2,
@@ -1194,15 +1207,15 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       elevation: 8,
     },
     searchButtonGradient: {
-      paddingVertical: SCREEN_HEIGHT * 0.022,
-      paddingHorizontal: SCREEN_WIDTH * 0.065,
+      paddingVertical: 18,
+      paddingHorizontal: 26,
       borderRadius: 28,
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "row",
     },
     searchButtonText: {
-      fontSize: SCREEN_WIDTH * 0.045,
+      fontSize: 18,
       fontWeight: "800",
       color: "#000",
       marginRight: 8,
@@ -1210,85 +1223,87 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 6,
     },
-    inputSection: {
-      marginBottom: SCREEN_HEIGHT * 0.025,
-    },
-    journeyCard: {
-      backgroundColor: "#ffffff",
-      padding: SCREEN_WIDTH * 0.04,
-      borderRadius: 22,
-      shadowColor: "#000",
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 6,
-    },
-    journeyHeaderRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: SCREEN_HEIGHT * 0.02,
-    },
-    journeyIconContainer: {
-      height: SCREEN_WIDTH * 0.12,
-      width: SCREEN_WIDTH * 0.12,
-      borderRadius: SCREEN_WIDTH * 0.06,
-      backgroundColor: "#efe2ca",
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: SCREEN_WIDTH * 0.03,
-    },
-    journeyTitleContainer: {
-      flex: 1,
-    },
-    journeyTitle: {
-      fontSize: SCREEN_WIDTH * 0.05,
-      fontWeight: "700",
-      color: "#000",
-    },
-    journeyInputsRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      justifyContent: "space-between",
-    },
-    journeyInputBlock: {
-      flex: 1,
-    },
-    journeyLabel: {
-      fontSize: SCREEN_WIDTH * 0.03,
-      fontWeight: "700",
-      color: "#555",
-      marginBottom: SCREEN_HEIGHT * 0.01,
-      textAlign: "center",
-    },
-    journeyInputBox: {
-      borderWidth: 2,
-      borderColor: "#f0c876",
-      borderRadius: 14,
-      paddingVertical: SCREEN_HEIGHT * 0.017,
-      paddingHorizontal: SCREEN_WIDTH * 0.04,
-      backgroundColor: "#fff",
-      alignItems: "center",
-    },
-    journeyInput: {
-      fontSize: SCREEN_WIDTH * 0.04,
-      fontWeight: "600",
-      color: "#222",
-      textAlign: "center",
-    },
-    journeyArrow: {
-      fontSize: SCREEN_WIDTH * 0.085,
-      fontWeight: "900",
-      color: "#444",
-      includeFontPadding: false,
-      textAlignVertical: "center",
-    },
+     inputSection: {
+    marginBottom: 20,
+  },
+  journeyCard: {
+    backgroundColor: "#ffffff",
+    padding: 15,
+    borderRadius: 22,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+jjourneyHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+journeyIconContainer: {
+  height: 48,
+  width: 48,
+  borderRadius: 24,
+  backgroundColor: "#efe2ca",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 12,
+},
+journeyTitleContainer: {
+  flex: 1,
+},
+journeyTitle: {
+  fontSize: 20,
+  fontWeight: "700",
+  color: "#000",
+},
+journeyInputsRow: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+},
+journeyInputBlock: {
+  flex: 1,
+},
+journeyLabel: {
+  fontSize: 12,
+  fontWeight: "700",
+  color: "#555",
+  marginBottom: 8,
+  textAlign: "center",
+},
+journeyInputBox: {
+  borderWidth: 2,
+  borderColor: "#f0c876",
+  borderRadius: 14,
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+  backgroundColor: "#fff",
+  alignItems: "center",
+},
+journeyInput: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#222",
+  textAlign: "center",
+},
+journeyArrow: {
+  fontSize: 34,
+  fontWeight: "900",
+  color: "#444",
+  includeFontPadding: false, // removes weird top spacing
+  textAlignVertical: "center", // Android perfect centering
+},
+
+    // New styles for proper suggestion box positioning
     inputContainer: {
       position: 'relative',
       zIndex: 1000,
     },
     suggestionBox: {
       position: 'absolute',
-      top: '100%',
+      top: '100%', // Position below the input box
       left: 0,
       right: 0,
       backgroundColor: "#fff",
@@ -1296,7 +1311,7 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       borderColor: "#f0c876",
       borderRadius: 10,
       marginTop: 5,
-      maxHeight: SCREEN_HEIGHT * 0.2,
+      maxHeight: 150,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -1305,17 +1320,17 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) => {
       zIndex: 2,
     },
     suggestionScroll: {
-      maxHeight: SCREEN_HEIGHT * 0.2,
+      maxHeight: 150,
     },
     suggestionItem: {
-      padding: SCREEN_WIDTH * 0.03,
+      padding: 12,
       borderBottomWidth: 1,
       borderBottomColor: "#f0f0f0",
     },
     suggestionText: {
-      fontSize: SCREEN_WIDTH * 0.04,
+      fontSize: 16,
       color: "#333",
       textAlign: "center",
     },
   });
-};
+}; 

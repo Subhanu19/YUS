@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  useWindowDimensions,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
@@ -17,6 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+
 
 // Helper to calculate distance (Haversine formula)
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -38,8 +38,6 @@ export default function BusListScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
-  
   const {
     src,
     dest,
@@ -65,8 +63,9 @@ export default function BusListScreen() {
 
   // ----- Fetch buses -----
   useEffect(() => {
-    console.log("current buses - ", buses);
+    console.log("current buses - ",buses)
     if (initialBuses && initialBuses.length > 0) {
+      
       setLoading(false);
       return;
     }
@@ -197,11 +196,11 @@ export default function BusListScreen() {
       >
         {/* Header Row */}
         <View style={styles.cardTopRow}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: SCREEN_WIDTH * 0.05 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
             <Text style={styles.cardBusNumber}>Bus - {item.bus_id}</Text>
             
             <View style={styles.busIconCircle}>
-              <MaterialCommunityIcons name="bus" size={SCREEN_WIDTH * 0.08} color="#FFF" />
+              <MaterialCommunityIcons name="bus" size={32} color="#FFF" />
             </View>
           </View>
 
@@ -219,31 +218,19 @@ export default function BusListScreen() {
         <View style={styles.pathRow}>
           <View style={styles.pathGraphic}>
             <View style={styles.iconWithLabel}>
-              <MaterialCommunityIcons 
-                name="bus-stop-uncovered" 
-                size={SCREEN_WIDTH * 0.1} 
-                color={GOLD_START} 
-              />
+              {/* <MaterialIcons name="home" size={35} color="#E07B39" /> */}
+              <MaterialCommunityIcons name="bus-stop-uncovered" size={40} color={GOLD_START} />
               <Text style={styles.stopLabel}>{item.stops?.[0]?.location_name}</Text>
             </View>
 
             <View style={styles.dottedLine} />
 
-            <MaterialCommunityIcons 
-              name="bus-side" 
-              size={SCREEN_WIDTH * 0.085} 
-              color={GOLD_START}  
-              style={{ marginTop: -SCREEN_HEIGHT * 0.07 }}
-            /> 
+            <MaterialCommunityIcons name="bus-side" size={35} color={GOLD_START}  marginTop="-59"/> 
 
             <View style={styles.dottedLine} />
 
             <View style={styles.iconWithLabel}>
-              <MaterialCommunityIcons 
-                name="account-school" 
-                size={SCREEN_WIDTH * 0.085} 
-                style={{ marginTop: SCREEN_HEIGHT * 0.008 }}
-              />
+              <MaterialCommunityIcons name="account-school" size={35} style={{ marginTop: 7 }} />
               <Text style={styles.stopLabel}>
                 {item.stops?.[item.stops.length - 1]?.location_name}
               </Text>
@@ -274,7 +261,7 @@ export default function BusListScreen() {
     else return `${buses.length} bus${buses.length !== 1 ? "es" : ""} found`;
   };
 
-  const styles = createStyles(theme, SCREEN_WIDTH, SCREEN_HEIGHT);
+  const styles = createStyles(theme);
 
   if (loading) {
     return (
@@ -340,48 +327,49 @@ export default function BusListScreen() {
   );
 }
 
-const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
+const createStyles = (theme) =>
   StyleSheet.create({
+
     container: {
       flex: 1,
       backgroundColor: theme.background,
-      padding: SCREEN_WIDTH * 0.04,
+      padding: 16,
     },
 
     headerSection: {
-      marginBottom: SCREEN_HEIGHT * 0.025,
+      marginBottom: 20,
       alignItems: "center",
     },
 
     header: {
-      marginTop: SCREEN_HEIGHT * 0.06,
-      fontSize: SCREEN_WIDTH * 0.06,
+      marginTop: 50,
+      fontSize: 24,
       fontWeight: "800",
-      marginBottom: SCREEN_HEIGHT * 0.01,
+      marginBottom: 8,
       textAlign: "center",
       color: theme.GOLD_START,
     },
 
     subtitle: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       fontWeight: "500",
       textAlign: "center",
     },
 
     listContent: {
-      paddingBottom: SCREEN_HEIGHT * 0.03,
+      paddingBottom: 20,
     },
 
     busCard: {
-      backgroundColor: "#fff",
-      borderRadius: SCREEN_WIDTH * 0.075,
-      padding: SCREEN_WIDTH * 0.05,
-      height: SCREEN_HEIGHT * 0.25,
-      marginBottom: SCREEN_HEIGHT * 0.022,
+      backgroundColor:"#fff",
+      borderRadius: 30,
+      padding: 20,
+      height:200,
+      marginBottom: 18,
       shadowColor: "#000",
       shadowOpacity: 0.15,
-      shadowRadius: SCREEN_WIDTH * 0.05,
-      shadowOffset: { width: 0, height: SCREEN_HEIGHT * 0.01 },
+      shadowRadius: 20,
+      shadowOffset: { width: 0, height: 8 },
       elevation: 8,
     },
 
@@ -389,56 +377,56 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: SCREEN_HEIGHT * 0.018,
+      marginBottom: 15,
     },
 
     cardBusNumber: {
-      fontSize: SCREEN_WIDTH * 0.055,
+      fontSize: 22,
       fontWeight: "900",
       color: "#000",
       letterSpacing: -1,
     },
 
     busIconCircle: {
-      width: SCREEN_WIDTH * 0.095,
-      height: SCREEN_WIDTH * 0.095,
-      borderRadius: SCREEN_WIDTH * 0.0475,
-      backgroundColor: theme.GOLD_START,
+      width: 39,
+      height: 39,
+      borderRadius: 28,
+      backgroundColor: theme.GOLD_START ,
       justifyContent: "center",
       alignItems: "center",
     },
 
     stopPill: {
       backgroundColor: "#E8DCC8",
-      paddingHorizontal: SCREEN_WIDTH * 0.06,
-      paddingVertical: SCREEN_HEIGHT * 0.012,
-      borderRadius: SCREEN_WIDTH * 0.06,
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 25,
     },
 
     stopPillText: {
-      fontSize: SCREEN_WIDTH * 0.037,
+      fontSize: 15,
       fontWeight: "700",
       color: "#000",
     },
 
     cardRouteTitle: {
-      fontSize: SCREEN_WIDTH * 0.037,
+      fontSize: 15,
       fontWeight: "700",
       color: "#000",
-      marginBottom: SCREEN_HEIGHT * 0.035,
-      marginTop: -SCREEN_HEIGHT * 0.006,
+      marginBottom: 30,
+      marginTop: -5,
       textAlign: "left",
     },
 
     pathRow: {
-      marginTop: SCREEN_HEIGHT * 0.018,
+      marginTop: 15,
     },
 
     stopLabel: {
-      fontSize: SCREEN_WIDTH * 0.04,
+      fontSize: 16,
       fontWeight: "700",
       color: "#000",
-      marginTop: SCREEN_HEIGHT * 0.01,
+      marginTop: 8,
       textAlign: "center",
     },
 
@@ -446,13 +434,13 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginVertical: SCREEN_HEIGHT * 0.012,
+      marginVertical: 10,
     },
 
     iconWithLabel: {
       alignItems: "center",
       justifyContent: "center",
-      marginTop: -SCREEN_HEIGHT * 0.05,
+      marginTop:-42,
     },
 
     dottedLine: {
@@ -460,8 +448,8 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
       borderBottomWidth: 2,
       borderStyle: "dashed",
       borderColor: theme.GOLD_START,
-      marginHorizontal: -SCREEN_WIDTH * 0.04,
-      marginTop: -SCREEN_HEIGHT * 0.055,
+      marginHorizontal: -16,
+      marginTop:-45,
     },
 
     loader: {
@@ -472,8 +460,8 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
     },
 
     loadingText: {
-      marginTop: SCREEN_HEIGHT * 0.02,
-      fontSize: SCREEN_WIDTH * 0.04,
+      marginTop: 16,
+      fontSize: 16,
       fontWeight: "500",
     },
 
@@ -481,25 +469,25 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: SCREEN_WIDTH * 0.1,
+      paddingHorizontal: 40,
     },
 
     errorText: {
-      fontSize: SCREEN_WIDTH * 0.04,
+      fontSize: 16,
       textAlign: "center",
-      marginBottom: SCREEN_HEIGHT * 0.03,
-      lineHeight: SCREEN_HEIGHT * 0.027,
+      marginBottom: 24,
+      lineHeight: 22,
     },
 
     retryButton: {
-      paddingHorizontal: SCREEN_WIDTH * 0.06,
-      paddingVertical: SCREEN_HEIGHT * 0.015,
-      borderRadius: SCREEN_WIDTH * 0.03,
-      minWidth: SCREEN_WIDTH * 0.4,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 12,
+      minWidth: 160,
     },
 
     retryButtonText: {
-      fontSize: SCREEN_WIDTH * 0.04,
+      fontSize: 16,
       fontWeight: "600",
       textAlign: "center",
     },
@@ -508,17 +496,18 @@ const createStyles = (theme, SCREEN_WIDTH, SCREEN_HEIGHT) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: SCREEN_HEIGHT * 0.05,
+      paddingVertical: 40,
     },
 
     noData: {
-      fontSize: SCREEN_WIDTH * 0.045,
+      fontSize: 18,
       fontWeight: "600",
-      marginBottom: SCREEN_HEIGHT * 0.01,
+      marginBottom: 8,
     },
 
     noDataSubtitle: {
-      fontSize: SCREEN_WIDTH * 0.035,
+      fontSize: 14,
       fontWeight: "400",
     },
+
   });
