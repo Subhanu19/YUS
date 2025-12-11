@@ -14,14 +14,25 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // add(MyReactNativePackage())
+          // Register your WebSocketPackage manually
+          add(WebSocketPackage())
         },
     )
   }
 
   override fun onCreate() {
     super.onCreate()
+
+    // VERY IMPORTANT — required for accessing RN context from native service
+    ApplicationHolder.application = this
+
+    // Load React Native
     loadReactNative(this)
   }
+}
+
+override fun getPackages(): List<ReactPackage> {
+    val packages = PackageList(this).packages.toMutableList()
+    packages.add(WebSocketPackage())
+    return packages
 }
