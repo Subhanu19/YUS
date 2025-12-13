@@ -9,7 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import webSocketService from "../services/WebSocketService";
+import WebSocketService from "../services/WebSocketService";
 import { useTheme } from "../context/ThemeContext";
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -364,11 +364,8 @@ export default function ScheduleScreen() {
 
   // ===== WebSocket updates =====
   useEffect(() => {
-    // connect (webSocketService.connect should be idempotent)
-    webSocketService.connect();
-    setConnectionStatus("connected");
 
-    const unsubscribe = webSocketService.subscribe((data) => {
+    const unsubscribe = WebSocketService.subscribe((data) => {
       if (!data) return;
 
       // normalize driver-provided keys

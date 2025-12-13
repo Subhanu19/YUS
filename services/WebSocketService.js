@@ -59,30 +59,42 @@
 // // Singleton instance
 // const webSocketService = new WebSocketService();
 // export default webSocketService;
-
-
 import { AppState } from "react-native";
 
+const WS_URL = "wss://yus.kwscloud.in/yus/passenger-ws";
+
 let ws = null;
-let cachedMeta = null;
-let currentState = AppState.currentState;
+let listeners = new Set();
 
+/* 🔴 RAM CACHE */
+let cachedPayload = null;
+
+/* ---------------- CREATE WS ---------------- */
 function createWS() {
-  console.log("🔌 creating websocket");
+  if (ws) return;
 
-  ws = new WebSocket("wss://yus.kwscloud.in/yus/passenger-ws");
+  console.log("🔌 creating websocket");
+  ws = new WebSocket(WS_URL);
 
   ws.onopen = () => {
     console.log("🟢 ws connected");
 
-    if (cachedMeta) {
-      ws.send(JSON.stringify(cachedMeta));
-      console.log("📤 meta re-sent");
+    // 🔁 resend RAM payload
+    if (cachedPayload) {
+      ws.send(JSON.stringify(cachedPayload));
+      console.log("📤 re-sent RAM payload");
     }
   };
 
   ws.onmessage = (e) => {
-    console.log("📡 message:", e.data);
+    let data;
+    try {
+      data = JSON.parse(e.data);
+    } catch {
+      data = e.data;
+    }
+
+    listeners.forEach((cb) => cb(data));
   };
 
   ws.onerror = (e) => {
@@ -95,6 +107,7 @@ function createWS() {
   };
 }
 
+/* ---------------- CLOSE WS ---------------- */
 function closeWS() {
   if (!ws) return;
   console.log("⛔ closing websocket");
@@ -102,28 +115,43 @@ function closeWS() {
   ws = null;
 }
 
-/* -------- APP STATE HANDLER -------- */
-export function initWS(meta) {
-  cachedMeta = meta;
+/* ---------------- PUBLIC API ---------------- */
+const WebSocketService = {
+  /* call ONCE in App.js */
+  init() {
+    createWS();
 
-  // initial connect
-  createWS();
+    AppState.addEventListener("change", (state) => {
+      console.log("📱 appState:", state);
 
-  AppState.addEventListener("change", (nextState) => {
-    console.log("📱 appState:", nextState);
+      if (state === "background") {
+        closeWS();
+      }
 
-    // BACKGROUND
-    if (nextState === "background") {
-      console.log("💾 storing meta & disconnecting");
-      closeWS();
+      if (state === "active") {
+        createWS();
+      }
+    });
+  },
+
+  /* send + cache in RAM */
+  send(payload) {
+    cachedPayload = payload; // 🧠 RAM only
+    console.log("💾 payload stored in RAM");
+
+    if (!ws) createWS();
+
+    if (ws?.readyState === 1) {
+      ws.send(JSON.stringify(payload));
+      console.log("📤 payload sent");
     }
+  },
 
-    // FOREGROUND
-    if (nextState === "active") {
-      console.log("🔄 reconnecting websocket");
-      createWS();
-    }
+  /* subscribe */
+  subscribe(cb) {
+    listeners.add(cb);
+    return () => listeners.delete(cb);
+  },
+};
 
-    currentState = nextState;
-  });
-}
+export default WebSocketService;

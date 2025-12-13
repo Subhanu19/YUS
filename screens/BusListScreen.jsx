@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
-import webSocketService from "../services/WebSocketService";
+import WebSocketService from "../services/WebSocketService";
 import Icon from "react-native-vector-icons/Ionicons";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -71,48 +71,11 @@ export default function BusListScreen() {
       return;
     }
 
-    // const fetchBusRoutes = async () => {
-    //   try {
-    //     setLoading(true);
-    //     setError(null);
-    //     let url = "";
-
-    //     if (
-    //       searchType === "srcDestStop" &&
-    //       actualSource &&
-    //       actualDestination &&
-    //       stop
-    //     ) {
-    //       url = `https://yus.kwscloud.in/yus/src-${actualSource}&dest-${actualDestination}&stop-${stop}`;
-    //     } else if (actualSource && actualDestination) {
-    //       url = `https://yus.kwscloud.in/yus/src-${actualSource}&dest-${actualDestination}`;
-    //     } else {
-    //       setLoading(false);
-    //       return;
-    //     }
-
-    //     const res = await fetch(url);
-    //     const data = await res.json();
-
-    //     if (data && data !== "null") {
-    //       setBuses(Array.isArray(data) ? data : [data]);
-    //     } else {
-    //       setBuses([]);
-    //       setError("No buses found for your search criteria.");
-    //     }
-    //   } catch (err) {
-    //     console.error("Error fetching bus routes:", err);
-    //     setError("Failed to load buses. Please check your connection.");
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
   }, [actualSource, actualDestination, stop, searchType, busNumber, initialBuses]);
 
   // ----- WebSocket: Real-time updates -----
   useEffect(() => {
-    const unsubscribe = webSocketService.subscribe((data) => {
+    const unsubscribe = WebSocketService.subscribe((data) => {
       if (!data || !data.latitude || !data.longitude) return;
 
       const lat = parseFloat(data.latitude);
@@ -173,7 +136,7 @@ export default function BusListScreen() {
       direction: bus.direction,
     };
 
-    webSocketService.send(payload);
+    WebSocketService.send(payload);
     
     navigation.navigate("Schedule", {
       busObject: bus,
