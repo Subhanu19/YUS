@@ -172,12 +172,12 @@ const handleDestinationSuggestion = (text) => {
   }, [searchType]);
 
   // WebSocket Connection
-  useEffect(() => {
-    if (isFocused) {
-      webSocketService.connect();
-    }
-    return () => {};
-  }, [isFocused]);
+  // useEffect(() => {
+  //   if (isFocused) {
+  //     webSocketService.connect();
+  //   }
+  //   return () => {};
+  // }, [isFocused]);
 
   // Subscribe to bus updates
   // useEffect(() => {

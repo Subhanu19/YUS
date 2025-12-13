@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
 
 
+
 export default function SplashScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
