@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,35 +7,28 @@ import {
   ActivityIndicator,
   FlatList,
   Platform,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import WebSocketService from "../services/WebSocketService";
 import { useTheme } from "../context/ThemeContext";
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 // ====== Constants ======
 const ITEM_HEIGHT = 120;
-const DISTANCE_THRESHOLD_METERS = 1000; // above this show km else meters
-const STOP_REACHED_THRESHOLD_METERS = 50; // 50 meters threshold for "reached"
+const DISTANCE_THRESHOLD_METERS = 1000;
+const BUS_ICON_TOP_OFFSET = 16;
+const YELLOW_PROGRESS_COLOR = "#FFD700";
 
-// ====== Helpers ======
+// ====== SIMPLIFIED Math - Working Version ======
 
-// Haversine formula for distance (meters)
 function getDistance(lat1, lon1, lat2, lon2) {
-  if (
-    lat1 == null ||
-    lon1 == null ||
-    lat2 == null ||
-    lon2 == null ||
-    Number.isNaN(lat1) ||
-    Number.isNaN(lon1) ||
-    Number.isNaN(lat2) ||
-    Number.isNaN(lon2)
-  )
-    return NaN;
-
-  const R = 6371e3; // Earth radius in meters
+  if (!lat1 || !lon1 || !lat2 || !lon2) return NaN;
+  
+  const R = 6371e3;
   const toRad = (x) => (x * Math.PI) / 180;
   const φ1 = toRad(lat1);
   const φ2 = toRad(lat2);
@@ -46,108 +39,113 @@ function getDistance(lat1, lon1, lat2, lon2) {
     Math.sin(Δφ / 2) ** 2 +
     Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // meters
+  return R * c;
 }
 
-// Format 24h "HH:MM" to 12-hour with AM/PM (if needed)
-const to12HourFormat = (timeStr) => {
-  if (!timeStr || timeStr === "--:--") return "--:--";
+/**
+ * SIMPLE VERSION: Calculate progress using distance ratio
+ */
+function calculateSegmentProgress(busLat, busLon, startStop, endStop) {
+  const startLat = parseFloat(startStop.lat);
+  const startLon = parseFloat(startStop.lon);
+  const endLat = parseFloat(endStop.lat);
+  const endLon = parseFloat(endStop.lon);
 
-  if (
-    typeof timeStr === "string" &&
-    (timeStr.toUpperCase().includes("AM") || timeStr.toUpperCase().includes("PM"))
-  ) {
-    return timeStr;
+  if (Number.isNaN(startLat) || Number.isNaN(startLon) || 
+      Number.isNaN(endLat) || Number.isNaN(endLon)) {
+    return 0;
   }
 
-  const parts = String(timeStr).split(":");
-  if (parts.length < 2) return "--:--";
-  const hours = Number(parts[0]);
-  const minutes = Number(parts[1]);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return "--:--";
+  const distanceToStart = getDistance(busLat, busLon, startLat, startLon);
+  const distanceToEnd = getDistance(busLat, busLon, endLat, endLon);
+  const segmentLength = getDistance(startLat, startLon, endLat, endLon);
 
-  const period = hours >= 12 ? "PM" : "AM";
-  const twelveHour = hours % 12 || 12;
-  return `${twelveHour.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")} ${period}`;
-};
-
-// Convert times to minutes since midnight.
-// Accepts "HH:MM" (24-hour) or "hh:mm AM/PM".
-const parseTimeToMinutes = (timeStr) => {
-  if (!timeStr || timeStr === "--:--") return null;
-
-  const s = String(timeStr).trim();
-  const ampmMatch = s.match(/(AM|PM)$/i);
-  if (ampmMatch) {
-    const clean = s.replace(/\s*(AM|PM)$/i, "");
-    const [hStr, mStr] = clean.split(":");
-    const h = Number(hStr);
-    const m = Number(mStr);
-    if (Number.isNaN(h) || Number.isNaN(m)) return null;
-    let hours = h % 12;
-    if (s.toUpperCase().includes("PM")) hours += 12;
-    return hours * 60 + m;
-  } else {
-    const [hStr, mStr] = s.split(":");
-    const h = Number(hStr);
-    const m = Number(mStr);
-    if (Number.isNaN(h) || Number.isNaN(m)) return null;
-    return (h % 24) * 60 + m;
-  }
-};
-
-// Convert minutes since midnight back to HH:MM (24h)
-const minutesToHHMM = (mins) => {
-  if (mins == null) return "--:--";
-  const normalized = ((mins % (24 * 60)) + 24 * 60) % (24 * 60);
-  const h = Math.floor(normalized / 60);
-  const m = normalized % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-};
-
-// Convert minutes -> nicely formatted ETA (12h)
-const minutesToDisplay = (mins) => {
-  return to12HourFormat(minutesToHHMM(mins));
-};
-
-// Format distance for display (meters or km)
-const formatDistance = (meters) => {
-  if (meters == null || Number.isNaN(meters)) return "";
-  if (meters >= DISTANCE_THRESHOLD_METERS) {
-    return `${(meters / 1000).toFixed(1)} km`;
-  }
-  return `${Math.round(meters)} m`;
-};
-
-// Convert scheduled static time for display (keeps your logic)
-const formatStaticTime = (timeStr, isUpRoute) => {
-  if (!timeStr) return "--:--";
-
-  if (
-    typeof timeStr === "string" &&
-    (timeStr.toUpperCase().includes("AM") || timeStr.toUpperCase().includes("PM"))
-  ) {
-    return timeStr;
+  if (segmentLength === 0 || Number.isNaN(distanceToStart) || Number.isNaN(distanceToEnd)) {
+    return 0;
   }
 
-  const [hours, minutes] = String(timeStr).split(":").map(Number);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return "--:--";
-
-  if (isUpRoute) {
-    const twelveHour = hours % 12 || 12;
-    return `${twelveHour.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")} AM`;
-  } else {
-    const period = hours >= 12 ? "PM" : "AM";
-    const twelveHour = hours % 12 || 12;
-    return `${twelveHour.toString().padStart(2, "00")}:${minutes
-      .toString()
-      .padStart(2, "0")} ${period}`;
+  // Simple ratio formula
+  let progress = 0;
+  if (distanceToStart + distanceToEnd > 0) {
+    progress = 1 - (distanceToEnd / (distanceToStart + distanceToEnd));
   }
-};
+
+  // Clamp between 0 and 1
+  progress = Math.max(0, Math.min(1, progress));
+  
+  // Smooth near stops
+  if (distanceToStart < 50) return Math.max(0.05, progress);
+  if (distanceToEnd < 50) return Math.min(0.95, progress);
+  
+  return progress;
+}
+
+// ✅ FIX #1 & #2: Updated findCurrentSegment with SAFE fallback
+/**
+ * IMPROVED VERSION: Find current segment with state-preserving fallback
+ */
+function findCurrentSegment(busLat, busLon, stops, lastConfirmedStopIndex, prevSegment) {
+  if (!stops || stops.length < 2) {
+    return { segmentIndex: 0, progress: 0 };
+  }
+
+  let bestSegment = { index: 0, progress: 0 };
+  let bestDistance = Infinity;
+
+  // Search from current segment forward
+  const startIdx = Math.max(0, Math.min(lastConfirmedStopIndex, stops.length - 2));
+  
+  for (let i = startIdx; i < stops.length - 1; i++) {
+    const startStop = stops[i];
+    const endStop = stops[i + 1];
+    
+    if (!startStop?.lat || !startStop?.lon || !endStop?.lat || !endStop?.lon) {
+      continue;
+    }
+
+    const startLat = parseFloat(startStop.lat);
+    const startLon = parseFloat(startStop.lon);
+    const endLat = parseFloat(endStop.lat);
+    const endLon = parseFloat(endStop.lon);
+    
+    if (Number.isNaN(startLat) || Number.isNaN(startLon) || 
+        Number.isNaN(endLat) || Number.isNaN(endLon)) {
+      continue;
+    }
+
+    // Check if bus is between these two stops
+    const distanceToStart = getDistance(busLat, busLon, startLat, startLon);
+    const distanceToEnd = getDistance(busLat, busLon, endLat, endLon);
+    
+    // If bus is closer to this segment than previous best, use it
+    const minDist = Math.min(distanceToStart, distanceToEnd);
+    if (minDist < bestDistance) {
+      bestDistance = minDist;
+      
+      // Calculate progress
+      const progress = calculateSegmentProgress(
+        busLat, busLon, 
+        { lat: startLat, lon: startLon }, 
+        { lat: endLat, lon: endLon }
+      );
+      
+      bestSegment = {
+        index: i,
+        progress: progress
+      };
+    }
+  }
+
+  // ✅ FIX #1 & #2: SAFE fallback using previous segment state
+  if (!Number.isFinite(bestDistance)) {
+    return {
+      segmentIndex: prevSegment?.index ?? startIdx,
+      progress: prevSegment?.progress ?? 0.5
+    };
+  }
+
+  return bestSegment;
+}
 
 // ====== Component ======
 export default function ScheduleScreen() {
@@ -159,31 +157,252 @@ export default function ScheduleScreen() {
 
   const [busData, setBusData] = useState(busObject || { stops: [] });
   const [loading, setLoading] = useState(!busObject?.stops?.length);
-  const [currentStopIndex, setCurrentStopIndex] = useState(0); // 0-based
+  const [currentSegment, setCurrentSegment] = useState({ index: 0, progress: 0 });
+  const [lastConfirmedStopIndex, setLastConfirmedStopIndex] = useState(0);
   const [location, setLocation] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState("connecting");
-  const [etas, setEtas] = useState({}); // { stopIndex(0-based): ETA string }
+  const [etas, setEtas] = useState({});
   const [etaCalculated, setEtaCalculated] = useState(false);
-  const [reachedStops, setReachedStops] = useState({}); // { index: true }
+  const [reachedStops, setReachedStops] = useState({});
+  const [nextStopDistance, setNextStopDistance] = useState(null);
 
-  const translateY = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(BUS_ICON_TOP_OFFSET)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
+  const prevSegmentRef = useRef({ index: 0, progress: 0 });
 
-  // animated line progress array — rebuild when stops change
+  // Yellow progress line animation values
   const [lineProgress, setLineProgress] = useState(
     () => (busData.stops?.map(() => new Animated.Value(0)) || [])
   );
 
   useEffect(() => {
-    // rebuild line progress animated values if stops changed length
     setLineProgress(busData.stops?.map(() => new Animated.Value(0)) || []);
   }, [busData.stops?.length]);
 
-  // route direction
   const isUpRoute = (busData?.direction || "").toUpperCase() === "UP";
 
-  // helper: status color & delay
+  // ====== YELLOW PROGRESS LINE FUNCTIONS ======
+  
+  const updateYellowProgressLine = useCallback((segmentIndex, segmentProgress) => {
+    lineProgress.forEach((anim, index) => {
+      let targetValue = 0;
+      
+      if (index < segmentIndex) {
+        // Past segments - fully yellow
+        targetValue = 1;
+      } else if (index === segmentIndex) {
+        // Current segment - partial yellow based on bus position
+        targetValue = segmentProgress;
+      }
+      // Future segments remain 0 (not yellow)
+      
+      // Animate to the target value
+      if (Math.abs(anim.__getValue() - targetValue) > 0.01) {
+        Animated.timing(anim, {
+          toValue: targetValue,
+          duration: 300,
+          useNativeDriver: false,
+          easing: Easing.out(Easing.quad),
+        }).start();
+      }
+    });
+  }, [lineProgress]);
+
+  // ====== WebSocket Handler ======
+  useEffect(() => {
+    const unsubscribe = WebSocketService.subscribe((data) => {
+      if (!data) return;
+
+      // Extract GPS data
+      const latitude = data.latitude ?? data.lat ?? data.lattitude ?? data.lattude;
+      const longitude = data.longitude ?? data.lon ?? data.long ?? data.longitude;
+      const speedStr = data.speed ?? data.speedInMeters ?? data.speed_meters ?? "0";
+
+      if (latitude == null || longitude == null) return;
+
+      const currentLat = parseFloat(latitude);
+      const currentLon = parseFloat(longitude);
+      const currentSpeed = Number(speedStr) || 0;
+
+      setLocation({ lat: currentLat, lon: currentLon, speed: currentSpeed });
+
+      const stops = busData.stops || [];
+      
+      // === STEP 1: BUS MOVEMENT ===
+      if (stops.length > 1) {
+        const prev = prevSegmentRef.current;
+        
+        // ✅ Pass previous segment to findCurrentSegment for fallback
+        const segmentInfo = findCurrentSegment(
+          currentLat, 
+          currentLon, 
+          stops, 
+          lastConfirmedStopIndex,
+          prev
+        );
+        
+        // ✅ FIX #3: Improved segmentChanged logic (0.01 threshold)
+        const segmentChanged = 
+          prev.index !== segmentInfo.index || 
+          Math.abs(prev.progress - segmentInfo.progress) > 0.01;
+        
+        if (segmentChanged) {
+          setCurrentSegment(segmentInfo);
+          prevSegmentRef.current = segmentInfo;
+          
+          // Calculate bus position
+          const busY = (segmentInfo.index + segmentInfo.progress) * ITEM_HEIGHT + BUS_ICON_TOP_OFFSET;
+          
+          // 1. Animate bus movement
+          Animated.timing(translateY, {
+            toValue: busY,
+            duration: 500,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }).start();
+          
+          // 2. Update YELLOW progress line
+          updateYellowProgressLine(segmentInfo.index, segmentInfo.progress);
+          
+          // Auto-scroll
+          const targetScrollIndex = Math.max(0, segmentInfo.index - 1);
+          if (flatListRef.current) {
+            flatListRef.current.scrollToOffset({
+              offset: targetScrollIndex * ITEM_HEIGHT,
+              animated: true,
+            });
+          }
+        }
+      }
+
+      // === STEP 2: DISTANCE TO NEXT STOP ===
+      if (stops.length > 0) {
+        const nextStopIdx = Math.min(lastConfirmedStopIndex + 1, stops.length - 1);
+        const nextStop = stops[nextStopIdx];
+        
+        if (nextStop?.lat && nextStop?.lon) {
+          const nextStopLat = parseFloat(nextStop.lat);
+          const nextStopLon = parseFloat(nextStop.lon);
+          
+          if (!Number.isNaN(nextStopLat) && !Number.isNaN(nextStopLon)) {
+            const distance = getDistance(currentLat, currentLon, nextStopLat, nextStopLon);
+            if (!Number.isNaN(distance)) {
+              setNextStopDistance(distance);
+            }
+          }
+        }
+      }
+
+      // === STEP 3: ARRIVAL STATUS ===
+      const arrivalStatus = data.arrival_status ?? data.arrivalStatus ?? {};
+
+      if (arrivalStatus && typeof arrivalStatus === "object" && Object.keys(arrivalStatus).length > 0) {
+        const calc = calculateETAsFromArrivalStatus(arrivalStatus);
+        if (calc) {
+          setEtas(calc.etas);
+          setEtaCalculated(true);
+          
+          if (calc.latestIndex > lastConfirmedStopIndex) {
+            setLastConfirmedStopIndex(calc.latestIndex);
+            updateReachedStops(calc.latestIndex);
+          }
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [
+    busData.stops, 
+    translateY, 
+    lastConfirmedStopIndex,
+    lineProgress,
+    updateYellowProgressLine
+  ]);
+
+  // ====== Render Stop Item with YELLOW PROGRESS ======
+  const renderStop = ({ item, index }) => {
+    const displayStopIndex = Math.max(lastConfirmedStopIndex, currentSegment.index);
+    const isActive = index === displayStopIndex;
+    const isCompleted = index < lastConfirmedStopIndex;
+
+    const eta = etas[index] || "--:--";
+    const formattedArrival = formatStaticTime(item.arrival_time, isUpRoute);
+    const formattedDeparture = formatStaticTime(item.departure_time, isUpRoute);
+    const statusColor = getStatusColor(eta, formattedArrival);
+    const delayText = getDelayText(eta, formattedArrival);
+
+    const yellowProgress = lineProgress[index] ?? new Animated.Value(0);
+
+    return (
+      <View style={styles.stopContainer}>
+        <View style={styles.timeline}>
+          {/* BACKGROUND LINE (GRAY) */}
+          <View style={[styles.fullLine, { backgroundColor: theme.border }]} />
+          
+          {/* YELLOW PROGRESS LINE - Fills as bus moves */}
+          <Animated.View
+            style={[
+              styles.progressLine,
+              {
+                height: yellowProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, ITEM_HEIGHT],
+                }),
+                backgroundColor: YELLOW_PROGRESS_COLOR,
+              },
+            ]}
+          />
+          
+          <View
+            style={[
+              styles.circle,
+              {
+                backgroundColor: isActive ? theme.GOLD_START : isCompleted ? theme.accent : theme.border,
+              },
+            ]}
+          />
+        </View>
+
+        <View style={styles.contentContainer}>
+          <View style={styles.etaSection}>
+            <Text style={[styles.etaText, { color: statusColor }]}>{eta}</Text>
+            {delayText ? <Text style={[styles.delayText, { color: statusColor }]}>{delayText}</Text> : null}
+          </View>
+
+          <View style={[styles.stopDetails, { borderBottomColor: theme.border }]}>
+            <View style={styles.stopHeader}>
+              <Text style={[styles.stopName, { color: isActive ? theme.GOLD_START : isCompleted ? theme.accent : theme.textDark }]}>
+                {item.location_name}
+              </Text>
+              {isActive && (
+                <View style={[styles.activeBadge, { backgroundColor: theme.GOLD_START }]}>
+                  <Text style={styles.activeBadgeText}>CURRENT</Text>
+                </View>
+              )}
+              {isCompleted && (
+                <View style={[styles.reachedBadge, { backgroundColor: "#2b8a3e" }]}>
+                  <Text style={styles.reachedBadgeText}>REACHED</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.scheduleSection}>
+              <View style={styles.timeRow}>
+                <Text style={[styles.timeLabel, { color: theme.textLight }]}>Arrival:</Text>
+                <Text style={[styles.time, { color: theme.textDark }]}>{formattedArrival}</Text>
+              </View>
+              <View style={styles.timeRow}>
+                <Text style={[styles.timeLabel, { color: theme.textLight }]}>Departure:</Text>
+                <Text style={[styles.time, { color: theme.textDark }]}>{formattedDeparture}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  // ====== Helper Functions ======
   const getStatusColor = (eta, scheduledTime) => {
     if (!eta || eta === "--:--" || !scheduledTime) return theme.textLight;
     const etaMins = parseTimeToMinutes(eta) ?? 0;
@@ -203,27 +422,22 @@ export default function ScheduleScreen() {
     return diff > 0 ? `+${diff} min late` : `${Math.abs(diff)} min early`;
   };
 
-  // Calculate ETAs from arrival_status map (preferred)
-  const calculateETAsFromArrivalStatus = (arrivalStatusMap) => {
+  const calculateETAsFromArrivalStatus = useCallback((arrivalStatusMap) => {
     if (!arrivalStatusMap || Object.keys(arrivalStatusMap).length === 0) return null;
-
     const stops = busData.stops || [];
     if (!stops.length) return null;
-
-    const keys = Object.keys(arrivalStatusMap)
-      .map((k) => Number(k))
-      .filter((n) => !Number.isNaN(n));
+    
+    const keys = Object.keys(arrivalStatusMap).map((k) => Number(k)).filter((n) => !Number.isNaN(n));
     if (!keys.length) return null;
-    const latestSeq = Math.max(...keys); // 1-based
+    const latestSeq = Math.max(...keys);
     const latestIndex = latestSeq - 1;
     if (latestIndex < 0 || latestIndex >= stops.length) return null;
-
+    
     const latestReportedTimeStr = arrivalStatusMap[String(latestSeq)];
     const latestReportedMins = parseTimeToMinutes(latestReportedTimeStr);
     if (latestReportedMins == null) return null;
-
+    
     const newEtas = {};
-
     for (let i = 0; i <= latestIndex; i++) {
       const seq = i + 1;
       if (arrivalStatusMap[String(seq)]) {
@@ -232,14 +446,14 @@ export default function ScheduleScreen() {
         newEtas[i] = formatStaticTime(stops[i].arrival_time, isUpRoute);
       }
     }
-
+    
     const latestScheduledMins = parseTimeToMinutes(
       formatStaticTime(
         stops[latestIndex].arrival_time || stops[latestIndex].departure_time || "--:--",
         isUpRoute
       )
     );
-
+    
     for (let j = latestIndex + 1; j < stops.length; j++) {
       const scheduledMinsJ = parseTimeToMinutes(
         formatStaticTime(stops[j].arrival_time || stops[j].departure_time || "--:--", isUpRoute)
@@ -252,387 +466,111 @@ export default function ScheduleScreen() {
       const etaMins = latestReportedMins + diff;
       newEtas[j] = minutesToDisplay(etaMins);
     }
-
+    
     return { etas: newEtas, latestIndex };
-  };
+  }, [busData.stops, isUpRoute]);
 
-  // Fallback ETA calculation (one-time) using schedule shift
-  const calculateETAsFallback = (currentLat, currentLon, currentSpeed) => {
-    if (!busData.stops || !currentLat || !currentLon || etaCalculated) return null;
-
-    const newEtas = {};
-    const busStartTime = busData.stops[0]?.departure_time;
-    if (!busStartTime) return null;
-
-    const busStartMinutes = parseTimeToMinutes(formatStaticTime(busStartTime, isUpRoute));
-    if (busStartMinutes == null) return null;
-
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const timeDifference = currentMinutes - busStartMinutes;
-
-    busData.stops.forEach((stop, index) => {
-      if (index === 0) {
-        newEtas[index] = minutesToDisplay(currentMinutes);
-      } else {
-        const scheduledArrival = stop.arrival_time;
-        if (!scheduledArrival) {
-          newEtas[index] = "--:--";
-          return;
-        }
-        const scheduledMinutes = parseTimeToMinutes(formatStaticTime(scheduledArrival, isUpRoute));
-        if (scheduledMinutes == null) {
-          newEtas[index] = "--:--";
-          return;
-        }
-        const etaMinutes = scheduledMinutes + timeDifference;
-        newEtas[index] = minutesToDisplay(etaMinutes);
+  const updateReachedStops = useCallback((latestIndex) => {
+    setReachedStops(prev => {
+      const next = { ...prev };
+      for (let i = 0; i <= latestIndex; i++) {
+        next[i] = true;
       }
-    });
-
-    return newEtas;
-  };
-
-  // ===== Utility: mark stop reached & animate =====
-  const markStopReached = (index, currentLat, currentLon) => {
-    setReachedStops((prev) => {
-      if (prev[index]) return prev;
-      const next = { ...prev, [index]: true };
       return next;
     });
+  }, []);
 
-    // set current stop index and animate
-    setCurrentStopIndex((prev) => {
-      if (index === prev) return prev;
-      const next = index;
-      // animate bus to the reached stop
-      const busY = next * ITEM_HEIGHT;
-      Animated.spring(translateY, {
-        toValue: busY,
-        useNativeDriver: true,
-        damping: 12,
-        stiffness: 90,
-      }).start();
-
-      // update lineProgress: all previous full; current small progress maybe based on distance
-      lineProgress.forEach((lineAnim, i) => {
-        if (i < next) {
-          lineAnim.setValue(1);
-        } else if (i === next) {
-          // set small progress based on distance to next if available
-          if (busData.stops && busData.stops[i + 1]) {
-            const totalDist = getDistance(
-              parseFloat(busData.stops[i].lat),
-              parseFloat(busData.stops[i].lon),
-              parseFloat(busData.stops[i + 1].lat),
-              parseFloat(busData.stops[i + 1].lon)
-            );
-            const distFromCurrent = getDistance(
-              currentLat,
-              currentLon,
-              parseFloat(busData.stops[i].lat),
-              parseFloat(busData.stops[i].lon)
-            );
-            let progress = 0;
-            if (totalDist > 0 && !Number.isNaN(distFromCurrent)) {
-              progress = Math.max(0, Math.min(1, distFromCurrent / totalDist));
-            }
-            Animated.timing(lineAnim, {
-              toValue: progress,
-              duration: 200,
-              useNativeDriver: false,
-            }).start();
-          } else {
-            lineAnim.setValue(0);
-          }
-        } else {
-          lineAnim.setValue(0);
-        }
-      });
-
-      // auto-scroll FlatList to keep reached stop visible
-      if (flatListRef.current) {
-        flatListRef.current.scrollToOffset({
-          offset: Math.max(0, next * ITEM_HEIGHT - ITEM_HEIGHT),
-          animated: true,
-        });
-      }
-
-      return next;
-    });
-  };
-
-  // ===== WebSocket updates =====
-  useEffect(() => {
-
-    const unsubscribe = WebSocketService.subscribe((data) => {
-      if (!data) return;
-
-      // normalize driver-provided keys
-      const latitude = data.latitude ?? data.lat ?? data.lattitude ?? data.lattude;
-      const longitude = data.longitude ?? data.lon ?? data.long ?? data.longitude;
-      const speedStr = data.speed ?? data.speedInMeters ?? data.speed_meters ?? "0";
-
-      if (latitude == null || longitude == null) return;
-
-      const currentLat = parseFloat(latitude);
-      const currentLon = parseFloat(longitude);
-      const currentSpeed = Number(speedStr) || 0;
-
-      setLocation({ lat: currentLat, lon: currentLon, speed: currentSpeed });
-
-      // --- STOP REACHED THRESHOLD CHECK (distance-in-meters) ---
-      if (busData.stops && Array.isArray(busData.stops)) {
-        busData.stops.forEach((stop, idx) => {
-          try {
-            const stopLat = parseFloat(stop.lat ?? stop.latitude ?? stop.latitude_str ?? stop.lat_str);
-            const stopLon = parseFloat(stop.lon ?? stop.longitude ?? stop.longitude_str ?? stop.lon_str);
-            if (Number.isNaN(stopLat) || Number.isNaN(stopLon)) return;
-
-            // compute meters using haversine
-            const distMeters = getDistance(currentLat, currentLon, stopLat, stopLon);
-
-            if (!Number.isNaN(distMeters) && distMeters <= STOP_REACHED_THRESHOLD_METERS) {
-              // Mark reached (only once)
-              if (!reachedStops[idx]) {
-                markStopReached(idx, currentLat, currentLon);
-              }
-            }
-          } catch (e) {
-            // ignore parse errors for a stop
-          }
-        });
-      }
-
-      // If server sends arrival_status (map), use it to compute ETAs and current stop
-      const arrivalStatus = data.arrival_status ?? data.arrivalStatus ?? {};
-
-      if (arrivalStatus && typeof arrivalStatus === "object" && Object.keys(arrivalStatus).length > 0) {
-        const calc = calculateETAsFromArrivalStatus(arrivalStatus);
-        if (calc) {
-          setEtas(calc.etas);
-          setEtaCalculated(true);
-
-          const latestIndex = calc.latestIndex;
-          setCurrentStopIndex(latestIndex);
-
-          // move bus to the reported stop
-          const busY = latestIndex * ITEM_HEIGHT;
-          Animated.spring(translateY, {
-            toValue: busY,
-            useNativeDriver: true,
-            damping: 12,
-            stiffness: 90,
-          }).start();
-
-          // update progress lines
-          lineProgress.forEach((lineAnim, i) => {
-            if (i < latestIndex) {
-              lineAnim.setValue(1);
-            } else if (i === latestIndex) {
-              if (busData.stops && busData.stops[i + 1]) {
-                const totalDist = getDistance(
-                  parseFloat(busData.stops[i].lat),
-                  parseFloat(busData.stops[i].lon),
-                  parseFloat(busData.stops[i + 1].lat),
-                  parseFloat(busData.stops[i + 1].lon)
-                );
-                const distFromCurrent = getDistance(
-                  currentLat,
-                  currentLon,
-                  parseFloat(busData.stops[i].lat),
-                  parseFloat(busData.stops[i].lon)
-                );
-                let progress = 0;
-                if (totalDist > 0 && !Number.isNaN(distFromCurrent)) {
-                  progress = Math.max(0, Math.min(1, distFromCurrent / totalDist));
-                }
-                Animated.timing(lineAnim, {
-                  toValue: progress,
-                  duration: 200,
-                  useNativeDriver: false,
-                }).start();
-              } else {
-                lineAnim.setValue(0);
-              }
-            } else {
-              lineAnim.setValue(0);
-            }
-          });
-        }
-      } else {
-        // fallback method once
-        if (!etaCalculated) {
-          const fallback = calculateETAsFallback(currentLat, currentLon, currentSpeed);
-          if (fallback) {
-            setEtas(fallback);
-            setEtaCalculated(true);
-          }
-        }
-
-        // position-based animation progress
-        const stops = busData.stops || [];
-        if (stops && stops.length && currentStopIndex < stops.length - 1) {
-          const currentStop = stops[currentStopIndex];
-          const nextStop = stops[currentStopIndex + 1];
-          if (currentStop && nextStop && currentStop.lat && nextStop.lat) {
-            const totalDist = getDistance(
-              parseFloat(currentStop.lat),
-              parseFloat(currentStop.lon),
-              parseFloat(nextStop.lat),
-              parseFloat(nextStop.lon)
-            );
-            const distFromCurrent = getDistance(
-              currentLat,
-              currentLon,
-              parseFloat(currentStop.lat),
-              parseFloat(currentStop.lon)
-            );
-            let progress = 0;
-            if (totalDist > 0 && !Number.isNaN(distFromCurrent)) progress = Math.max(0, Math.min(1, distFromCurrent / totalDist));
-
-            const busY = (currentStopIndex + progress) * ITEM_HEIGHT;
-            Animated.spring(translateY, {
-              toValue: busY,
-              useNativeDriver: true,
-              damping: 12,
-              stiffness: 90,
-            }).start();
-
-            lineProgress.forEach((lineAnim, i) => {
-              if (i === currentStopIndex) {
-                Animated.timing(lineAnim, {
-                  toValue: progress,
-                  duration: 300,
-                  useNativeDriver: false,
-                }).start();
-              } else if (i < currentStopIndex) {
-                lineAnim.setValue(1);
-              } else {
-                lineAnim.setValue(0);
-              }
-            });
-
-            if (progress >= 1 && currentStopIndex < stops.length - 1) {
-              setCurrentStopIndex((prev) => {
-                const next = Math.min(prev + 1, stops.length - 1);
-                if (flatListRef.current) {
-                  flatListRef.current.scrollToOffset({
-                    offset: next * ITEM_HEIGHT - ITEM_HEIGHT,
-                    animated: true,
-                  });
-                }
-                return next;
-              });
-            }
-          }
-        }
-      }
-    });
-
-    return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busData.stops, currentStopIndex, translateY, etaCalculated, JSON.stringify(busData.stops?.map(s => s.lat + s.lon)), reachedStops]);
-
-  // render each stop item
-  const renderStop = ({ item, index }) => {
-    const isActive = index === currentStopIndex;
-    const isCompleted = index < currentStopIndex;
-
-    const eta = etas[index] || "--:--";
-    const formattedArrival = formatStaticTime(item.arrival_time, isUpRoute);
-    const formattedDeparture = formatStaticTime(item.departure_time, isUpRoute);
-    const statusColor = getStatusColor(eta, formattedArrival);
-    const delayText = getDelayText(eta, formattedArrival);
-
-    // if lineProgress shorter than stops, guard
-    const anim = lineProgress[index] ?? new Animated.Value(0);
-
-    // show reached badge if threshold matched
-    const reached = !!reachedStops[index];
-
-    return (
-      <View style={styles.stopContainer}>
-        <View style={styles.timeline}>
-          <View style={styles.fullLine} />
-          <Animated.View
-            style={[
-              styles.progressLine,
-              {
-                height: anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, ITEM_HEIGHT],
-                }),
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.circle,
-              {
-                backgroundColor: isActive ? theme.GOLD_START : isCompleted ? theme.accent : theme.border,
-              },
-            ]}
-          />
-        </View>
-
-        <View style={styles.contentContainer}>
-          {/* ETA Section - Left Side */}
-          <View style={styles.etaSection}>
-            <Text style={[styles.etaText, { color: statusColor }]}>{eta}</Text>
-            {delayText ? <Text style={[styles.delayText, { color: statusColor }]}>{delayText}</Text> : null}
-          </View>
-
-          {/* Stop Details - Center */}
-          <View style={[styles.stopDetails, { borderBottomColor: theme.border }]}>
-            <View style={styles.stopHeader}>
-              <Text style={[styles.stopName, { color: isActive ? theme.GOLD_START : isCompleted ? theme.accent : theme.textDark }]}>
-                {item.location_name}
-              </Text>
-              {isActive && (
-                <View style={[styles.activeBadge, { backgroundColor: theme.GOLD_START }]}>
-                  <Text style={styles.activeBadgeText}>CURRENT</Text>
-                </View>
-              )}
-              {reached && (
-                <View style={[styles.reachedBadge, { backgroundColor: "#2b8a3e" }]}>
-                  <Text style={styles.reachedBadgeText}>REACHED</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Static Schedule Times - Right Side */}
-            <View style={styles.scheduleSection}>
-              <View style={styles.timeRow}>
-                <Text style={[styles.timeLabel, { color: theme.textLight }]}>Arrival:</Text>
-                <Text style={[styles.time, { color: theme.textDark }]}>{formattedArrival}</Text>
-              </View>
-
-              <View style={styles.timeRow}>
-                <Text style={[styles.timeLabel, { color: theme.textLight }]}>Departure:</Text>
-                <Text style={[styles.time, { color: theme.textDark }]}>{formattedDeparture}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  // Footer info: next stop name + distance
+  // ====== Footer with Distance ======
   const computeNextStopInfo = () => {
     const stops = busData.stops || [];
     if (!stops.length) return { name: "N/A", distText: "" };
 
-    let nextIndex = Math.min(currentStopIndex + 1, stops.length - 1);
-    if (currentStopIndex >= stops.length - 1) nextIndex = stops.length - 1;
-
-    const nextStop = stops[nextIndex];
+    const nextStopIdx = Math.min(lastConfirmedStopIndex + 1, stops.length - 1);
+    const nextStop = stops[nextStopIdx];
     if (!nextStop) return { name: "N/A", distText: "" };
-    if (!location) return { name: nextStop.location_name || "N/A", distText: "" };
 
-    const d = getDistance(location.lat, location.lon, parseFloat(nextStop.lat), parseFloat(nextStop.lon));
-    return { name: nextStop.location_name || "N/A", distText: formatDistance(d) };
+    let distText = "";
+    if (nextStopDistance != null && !Number.isNaN(nextStopDistance)) {
+      distText = formatDistance(nextStopDistance);
+    }
+
+    return { 
+      name: nextStop.location_name || "N/A", 
+      distText: distText 
+    };
+  };
+
+  // ====== Format Functions ======
+  const to12HourFormat = (timeStr) => {
+    if (!timeStr || timeStr === "--:--") return "--:--";
+    if (typeof timeStr === "string" && (timeStr.toUpperCase().includes("AM") || timeStr.toUpperCase().includes("PM"))) {
+      return timeStr;
+    }
+    const parts = String(timeStr).split(":");
+    if (parts.length < 2) return "--:--";
+    const hours = Number(parts[0]);
+    const minutes = Number(parts[1]);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return "--:--";
+    const period = hours >= 12 ? "PM" : "AM";
+    const twelveHour = hours % 12 || 12;
+    return `${twelveHour.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr || timeStr === "--:--") return null;
+    const s = String(timeStr).trim();
+    const ampmMatch = s.match(/(AM|PM)$/i);
+    if (ampmMatch) {
+      const clean = s.replace(/\s*(AM|PM)$/i, "");
+      const [hStr, mStr] = clean.split(":");
+      const h = Number(hStr);
+      const m = Number(mStr);
+      if (Number.isNaN(h) || Number.isNaN(m)) return null;
+      let hours = h % 12;
+      if (s.toUpperCase().includes("PM")) hours += 12;
+      return hours * 60 + m;
+    } else {
+      const [hStr, mStr] = s.split(":");
+      const h = Number(hStr);
+      const m = Number(mStr);
+      if (Number.isNaN(h) || Number.isNaN(m)) return null;
+      return (h % 24) * 60 + m;
+    }
+  };
+
+  const minutesToHHMM = (mins) => {
+    if (mins == null) return "--:--";
+    const normalized = ((mins % (24 * 60)) + 24 * 60) % (24 * 60);
+    const h = Math.floor(normalized / 60);
+    const m = normalized % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  };
+
+  const minutesToDisplay = (mins) => to12HourFormat(minutesToHHMM(mins));
+
+  const formatDistance = (meters) => {
+    if (meters == null || Number.isNaN(meters)) return "";
+    if (meters >= DISTANCE_THRESHOLD_METERS) {
+      return `${(meters / 1000).toFixed(1)} km`;
+    }
+    return `${Math.round(meters)} m`;
+  };
+
+  const formatStaticTime = (timeStr, isUpRoute) => {
+    if (!timeStr) return "--:--";
+    if (typeof timeStr === "string" && (timeStr.toUpperCase().includes("AM") || timeStr.toUpperCase().includes("PM"))) {
+      return timeStr;
+    }
+    const [hours, minutes] = String(timeStr).split(":").map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return "--:--";
+    if (isUpRoute) {
+      const twelveHour = hours % 12 || 12;
+      return `${twelveHour.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} AM`;
+    } else {
+      const period = hours >= 12 ? "PM" : "AM";
+      const twelveHour = hours % 12 || 12;
+      return `${twelveHour.toString().padStart(2, "00")}:${minutes.toString().padStart(2, "0")} ${period}`;
+    }
   };
 
   if (loading) {
@@ -656,7 +594,6 @@ export default function ScheduleScreen() {
       </View>
 
       <View style={styles.scheduleContainer}>
-        {/* Timeline list */}
         <AnimatedFlatList
           ref={flatListRef}
           data={busData.stops}
@@ -664,13 +601,26 @@ export default function ScheduleScreen() {
           keyExtractor={(item, index) => `${index}`}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
           scrollEventThrottle={16}
         />
 
-        {/* 🚍 Bus inside timeline */}
+        {/* Bus Icon */}
         <View style={styles.busLayer}>
-          <Animated.View style={[styles.busMovingContainer, { transform: [{ translateY: Animated.subtract(translateY, scrollY) }] }]}>
+          <Animated.View 
+            style={[
+              styles.busMovingContainer, 
+              { 
+                transform: [
+                  { translateY: Animated.subtract(translateY, scrollY) }
+                ],
+                opacity: location ? 1 : 0.7,
+              }
+            ]}
+          >
             <View style={[styles.busIconContainer, { backgroundColor: theme.GOLD_START }]}>
               <Text style={styles.busEmoji}>🚍</Text>
             </View>
@@ -684,7 +634,7 @@ export default function ScheduleScreen() {
         </Text>
         <Text style={[styles.locationText, { color: theme.textLight }]}>
           {location
-            ? `Lat: ${location.lat.toFixed(6)}, Lon: ${location.lon.toFixed(6)}`
+            ? `Lat: ${location.lat?.toFixed(6) || "N/A"}, Lon: ${location.lon?.toFixed(6) || "N/A"}`
             : "Waiting for GPS updates..."}
         </Text>
 
@@ -757,27 +707,29 @@ const createStyles = (theme) =>
     timeline: { 
       width: 40, 
       alignItems: "center", 
-      justifyContent: "flex-start" 
+      justifyContent: "flex-start",
+      position: 'relative',
     },
     fullLine: {
       position: "absolute",
       top: 8,
       width: 2,
       height: "100%",
-      backgroundColor: "#fff",
+      backgroundColor: theme.border,
     },
     progressLine: {
       position: "absolute",
       top: 8,
       width: 2,
-      backgroundColor: theme.accent,
+      backgroundColor: "#FFD700",
+      zIndex: 2,
     },
     circle: {
       width: 16,
       height: 16,
       borderRadius: 8,
       marginVertical: 5,
-      zIndex: 1,
+      zIndex: 3,
     },
     contentContainer: {
       flex: 1,
@@ -858,6 +810,11 @@ const createStyles = (theme) =>
       borderRadius: 16,
       justifyContent: "center",
       alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      elevation: 5,
     },
     busEmoji: { 
       fontSize: 16 
@@ -886,11 +843,12 @@ const createStyles = (theme) =>
       left: 20,
       right: 0,
       bottom: 0,
+      pointerEvents: 'none',
     },
     busMovingContainer: {
       position: "absolute",
       left: 0,
-      top: 16,
+      top: 0,
       zIndex: 10,
     },
   });

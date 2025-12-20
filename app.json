@@ -1,4 +1,7 @@
 {
   "name": "YellohBus",
-  "displayName": "YellohBus"
+  "displayName": "YellohBus",
+  "plugins": [
+    "expo-asset"
+  ]
 }

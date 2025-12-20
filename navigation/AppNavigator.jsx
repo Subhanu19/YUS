@@ -7,6 +7,7 @@ import SplashScreen from "../screens/SplashScreen";
 import SearchScreen from "../screens/SearchScreen";
 import BusListScreen from "../screens/BusListScreen";
 import ScheduleScreen from "../screens/ScheduleScreen";
+import TimetableScreen from "../screens/TimetableScreen"; // ✅ Add this import
 
 const Stack = createNativeStackNavigator();
 
@@ -14,7 +15,7 @@ export default function AppNavigator() {
   const { theme } = useTheme();
 
   return (
-    
+  
       <Stack.Navigator initialRouteName="Splash">
         <Stack.Screen
           name="Splash"
@@ -24,7 +25,7 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Search"
           component={SearchScreen}
-          options={{ headerShown: false}}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="BusList"
@@ -36,7 +37,13 @@ export default function AppNavigator() {
           component={ScheduleScreen}
           options={{ headerShown: false }}
         />
+        {/* ✅ Add Timetable Screen */}
+        <Stack.Screen
+          name="Timetable"
+          component={TimetableScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
-   
+
   );
 }
