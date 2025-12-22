@@ -13,6 +13,8 @@ import {
 import { useRoute } from "@react-navigation/native";
 import WebSocketService from "../services/WebSocketService";
 import { useTheme } from "../context/ThemeContext";
+import { useFocusEffect } from "@react-navigation/native";
+
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -169,6 +171,24 @@ export default function ScheduleScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
   const prevSegmentRef = useRef({ index: 0, progress: 0 });
+
+  useFocusEffect(
+  React.useCallback(() => {
+    // Screen is focused → do nothing
+    return () => {
+      // Screen is unfocused (going back)
+      const payload = {
+        driver_id: 1000,
+        route_id: 0,
+        direction: "up",
+      };
+
+      WebSocketService.send(payload);
+      console.log("📤 Sent on ScheduleScreen exit:", payload);
+    };
+  }, [])
+);
+
 
   // Yellow progress line animation values
   const [lineProgress, setLineProgress] = useState(
