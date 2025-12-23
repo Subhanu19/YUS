@@ -59,40 +59,7 @@ const BusTimetable = ({ route }) => {
       }));
   };
 
-  const getSampleData = () => [
-    {
-      source: "Jackhouse",
-      destination: "Kcet",
-      busNo: "145",
-      time: "09:30",
-      route: "House, Pipe, Street3, Street2, Street1",
-      stops: ["House", "Pipe", "Street3", "Street2", "Street1"]
-    },
-    {
-      source: "Kovilpatti",
-      destination: "Kcet",
-      busNo: "27",
-      time: "07:15",
-      route: "Vasen Hospital, Mangala Vinayagar Temple, Dhanalakshmi Hotel, Kovilpatti Bus Stand, Kovilpatti Market, Kovilpatti Railway Station, Vellayuthapuram, Amirpaalayam, Sattur Police Station, Krishna Hospital, Madurai Bus Stop, Sattur Petrol Bunk, Sattur Prc, Venkatachalam, Toll Ghate, Rr Nagar, Pattambuthur, Soolakarai, Kcet",
-      stops: ["Vasen Hospital", "Mangala Vinayagar Temple", "Dhanalakshmi Hotel", "Kovilpatti Bus Stand", "Kovilpatti Market", "Kovilpatti Railway Station", "Vellayuthapuram", "Amirpaalayam", "Sattur Police Station", "Krishna Hospital", "Madurai Bus Stop", "Sattur Petrol Bunk", "Sattur Prc", "Venkatachalam", "Toll Ghate", "Rr Nagar", "Pattambuthur", "Soolakarai", "Kcet"]
-    },
-    {
-      source: "Busstand",
-      destination: "Kcet",
-      busNo: "353",
-      time: "8:00",
-      route: "Bus Stand, Virudhunagar Railway Station, Prc, Kcet",
-      stops: ["Bus Stand", "Virudhunagar Railway Station", "Prc", "Kcet"]
-    },
-    {
-      source: "Sattur",
-      destination: "Kcet",
-      busNo: "6",
-      time: "08:07",
-      route: "Jack's Stop, Madurai Bus Stop, Petrol Bunk, Sattur Prc, Devi Theatre, Venkatachalapuram, Toll Ghate, Rr Nagar, After Pattambuthur, Soolakarai, Kooraikundu, Collectrate, Medical College, Way To Virudhunagar, Vvv College, Kcet",
-      stops: ["Jack's Stop", "Madurai Bus Stop", "Petrol Bunk", "Sattur Prc", "Devi Theatre", "Venkatachalapuram", "Toll Ghate", "Rr Nagar", "After Pattambuthur", "Soolakarai", "Kooraikundu", "Collectrate", "Medical College", "Way To Virudhunagar", "Vvv College", "Kcet"]
-    },
-  ];
+  const getSampleData = () => [];
 
   const toggleRoute = (index) => {
     setExpandedRoutes(prev => ({

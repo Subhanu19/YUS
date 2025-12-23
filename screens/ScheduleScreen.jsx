@@ -649,14 +649,7 @@ export default function ScheduleScreen() {
       </View>
 
       <View style={[styles.footer, { borderTopColor: theme.border, backgroundColor: theme.secondary }]}>
-        <Text style={[styles.locationTitle, { color: theme.textDark }]}>
-          Current Location:
-        </Text>
-        <Text style={[styles.locationText, { color: theme.textLight }]}>
-          {location
-            ? `Lat: ${location.lat?.toFixed(6) || "N/A"}, Lon: ${location.lon?.toFixed(6) || "N/A"}`
-            : "Waiting for GPS updates..."}
-        </Text>
+    
 
         <Text style={[styles.connectionStatus, { color: theme.textLight }]}>
           Next stop:{" "}
@@ -689,7 +682,7 @@ const createStyles = (theme) =>
       fontWeight: "500" 
     },
     headerSection: {
-      padding: 50,
+      padding: 30,
       zIndex: 100,
       paddingBottom: 16,
       borderBottomWidth: 1,
@@ -840,7 +833,7 @@ const createStyles = (theme) =>
       fontSize: 16 
     },
     footer: {
-      padding: 16,
+      padding: 25,
       borderTopWidth: 1,
     },
     locationTitle: {
@@ -854,7 +847,7 @@ const createStyles = (theme) =>
       fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     },
     connectionStatus: {
-      fontSize: 12,
+      fontSize: 15,
       fontWeight: "500",
     },
     busLayer: {
