@@ -4,16 +4,33 @@ import {
   Text, 
   ScrollView, 
   StyleSheet, 
-  ActivityIndicator 
+  ActivityIndicator,
+  Pressable
 } from 'react-native';
+// Import your theme (assuming same structure as SearchScreen)
+import LightTheme from "../constants/Colours";
 
-const BusTimetable = () => {
+const BusTimetable = ({ route }) => {
+  const { timetableData } = route.params || {}; // Get pre-formatted data if passed
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedRoutes, setExpandedRoutes] = useState({});
+
+  const theme = LightTheme; // Use your theme
+  const styles = createStyles(theme); // Apply theme styles
 
   useEffect(() => {
-    fetchTimetable();
-  }, []);
+    if (timetableData) {
+      // Use pre-formatted data if available
+      setRoutes(timetableData.map(route => ({
+        ...route,
+        stops: route.route ? route.route.split(", ") : []
+      })));
+      setLoading(false);
+    } else {
+      fetchTimetable();
+    }
+  }, [timetableData]);
 
   const fetchTimetable = async () => {
     setLoading(true);
@@ -38,25 +55,51 @@ const BusTimetable = () => {
         busNo: r.bus_id,
         time: r.stops[0].departure_time,
         route: r.stops.map(s => s.location_name).join(", "),
+        stops: r.stops.map(s => s.location_name),
       }));
   };
 
   const getSampleData = () => [
     {
+      source: "Jackhouse",
+      destination: "Kcet",
+      busNo: "145",
+      time: "09:30",
+      route: "House, Pipe, Street3, Street2, Street1",
+      stops: ["House", "Pipe", "Street3", "Street2", "Street1"]
+    },
+    {
+      source: "Kovilpatti",
+      destination: "Kcet",
+      busNo: "27",
+      time: "07:15",
+      route: "Vasen Hospital, Mangala Vinayagar Temple, Dhanalakshmi Hotel, Kovilpatti Bus Stand, Kovilpatti Market, Kovilpatti Railway Station, Vellayuthapuram, Amirpaalayam, Sattur Police Station, Krishna Hospital, Madurai Bus Stop, Sattur Petrol Bunk, Sattur Prc, Venkatachalam, Toll Ghate, Rr Nagar, Pattambuthur, Soolakarai, Kcet",
+      stops: ["Vasen Hospital", "Mangala Vinayagar Temple", "Dhanalakshmi Hotel", "Kovilpatti Bus Stand", "Kovilpatti Market", "Kovilpatti Railway Station", "Vellayuthapuram", "Amirpaalayam", "Sattur Police Station", "Krishna Hospital", "Madurai Bus Stop", "Sattur Petrol Bunk", "Sattur Prc", "Venkatachalam", "Toll Ghate", "Rr Nagar", "Pattambuthur", "Soolakarai", "Kcet"]
+    },
+    {
+      source: "Busstand",
+      destination: "Kcet",
+      busNo: "353",
+      time: "8:00",
+      route: "Bus Stand, Virudhunagar Railway Station, Prc, Kcet",
+      stops: ["Bus Stand", "Virudhunagar Railway Station", "Prc", "Kcet"]
+    },
+    {
       source: "Sattur",
       destination: "Kcet",
       busNo: "6",
       time: "08:07",
-      route: "Jack's Stop, Madurai Bus Stop, Petrol Bunk, Sattur Prc, Devi Theatre, Venkatachalapuram, Toll Ghate, Rr Nagar, After Pattambuthur, Soolakarai, Kooraikundu, Collectrate, Medical College, Way To Virudhunagar, Vvv College, Kcet"
-    },
-    {
-      source: "America",
-      destination: "Kcet",
-      busNo: "113",
-      time: "08:36",
-      route: "Chair, Laptop Table, Washing Machine, Door, Front Ghate"
+      route: "Jack's Stop, Madurai Bus Stop, Petrol Bunk, Sattur Prc, Devi Theatre, Venkatachalapuram, Toll Ghate, Rr Nagar, After Pattambuthur, Soolakarai, Kooraikundu, Collectrate, Medical College, Way To Virudhunagar, Vvv College, Kcet",
+      stops: ["Jack's Stop", "Madurai Bus Stop", "Petrol Bunk", "Sattur Prc", "Devi Theatre", "Venkatachalapuram", "Toll Ghate", "Rr Nagar", "After Pattambuthur", "Soolakarai", "Kooraikundu", "Collectrate", "Medical College", "Way To Virudhunagar", "Vvv College", "Kcet"]
     },
   ];
+
+  const toggleRoute = (index) => {
+    setExpandedRoutes(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   if (loading) {
     return (
@@ -65,8 +108,10 @@ const BusTimetable = () => {
           <Text style={styles.title}>Bus Trips</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
-          <Text style={styles.loadingText}>Loading timetable...</Text>
+          <ActivityIndicator size="large" color={theme.primary || "#D4A53A"} />
+          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+            Loading timetable...
+          </Text>
         </View>
       </View>
     );
@@ -78,75 +123,234 @@ const BusTimetable = () => {
         <Text style={styles.title}>Bus Trips</Text>
       </View>
 
-      <ScrollView style={styles.scrollContainer}>
-        {/* Sticky header */}
-        <View style={styles.tableHeader}>
-          <Text style={[styles.cell, styles.sourceCol, styles.headerText]}>Source</Text>
-          <Text style={[styles.cell, styles.destCol, styles.headerText]}>Destination</Text>
-          <Text style={[styles.cell, styles.busCol, styles.headerText]}>Bus</Text>
-          <Text style={[styles.cell, styles.timeCol, styles.headerText]}>Time</Text>
-          <Text style={[styles.cell, styles.routeCol, styles.headerText]}>Route</Text>
-        </View>
-
-        {/* Data rows */}
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+      >
         {routes.map((route, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={[styles.cell, styles.sourceCol]}>{route.source}</Text>
-            <Text style={[styles.cell, styles.destCol]}>{route.destination}</Text>
-            <Text style={[styles.cell, styles.busCol, styles.busNumber]}>{route.busNo}</Text>
-            <Text style={[styles.cell, styles.timeCol, styles.timeText]}>{route.time}</Text>
-            <Text style={[styles.cell, styles.routeCol, styles.routeText]}>{route.route}</Text>
-          </View>
+          <Pressable 
+            key={index}
+            style={styles.card}
+            onPress={() => toggleRoute(index)}
+          >
+            <View style={styles.cardHeader}>
+              {/* Fixed-width bus number badge */}
+              <View style={styles.busBadge}>
+                <Text style={styles.busNumber}>{route.busNo}</Text>
+              </View>
+              
+              {/* Fixed-width time display */}
+              <View style={styles.timeContainer}>
+                <Text style={styles.time}>{route.time}</Text>
+              </View>
+              
+              {/* Flexible route section with full text display */}
+              <View style={styles.routeSection}>
+                <Text style={styles.location}>{route.source}</Text>
+                <View style={styles.arrowContainer}>
+                  <View style={styles.arrowLine} />
+                  <Text style={styles.arrowIcon}>▸</Text>
+                </View>
+                <Text style={styles.location}>{route.destination}</Text>
+              </View>
+            </View>
+            
+            {expandedRoutes[index] && (
+              <View style={styles.expandedSection}>
+                <Text style={styles.routeLabel}>Route ({route.stops.length} stops):</Text>
+                <View style={styles.chipsContainer}>
+                  {route.stops.map((stop, i) => (
+                    <View key={i} style={styles.chip}>
+                      <Text style={styles.chipText}>{stop}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+            
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>
+                {expandedRoutes[index] 
+                  ? '▲ Tap to collapse' 
+                  : `▼ Tap to view ${route.stops.length} stops`}
+              </Text>
+            </View>
+          </Pressable>
         ))}
       </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  title: { fontSize: 24, fontWeight: '700', textAlign: 'center', color: '#1a1a1a' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 60 },
-  loadingText: { marginTop: 16, color: '#666', fontSize: 14 },
-  scrollContainer: { flex: 1, paddingHorizontal: 12, paddingVertical: 8 },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#2c3e50',
-    paddingVertical: 12,
-    paddingHorizontal: 6,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  cell: { fontSize: 13, color: '#333', paddingHorizontal: 4, flexWrap: 'wrap' },
-  headerText: { color: '#fff', fontWeight: '600', textTransform: 'uppercase' },
-  sourceCol: { flex: 1.2 },
-  destCol: { flex: 1.3 },
-  busCol: { flex: 0.8, textAlign: 'center' },
-  timeCol: { flex: 1, textAlign: 'right' },
-  routeCol: { flex: 5.7 },
-  busNumber: { fontWeight: '700', color: '#2196F3' },
-  timeText: { fontWeight: '600', color: '#34495e' },
-  routeText: { color: '#555', fontSize: 12, lineHeight: 18 },
-});
+const createStyles = (theme) => {
+  // Extract colors from your theme or use defaults
+  const GOLD_START = "#edae25ff";
+  const GOLD_END = "#f1b21a";
+  const GOLD_DARK = "#c98a00";
+  const GLASS_BG = "rgba(255,255,255,0.88)";
+  
+  return StyleSheet.create({
+    container: { 
+      flex: 1, 
+      backgroundColor: theme.background || "#f5f7fa"
+    },
+    header: {
+      backgroundColor: theme.cardBackground || "#fff",
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderColor || "#e0e0e0",
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+    },
+    title: { 
+      fontSize: 28, 
+      fontWeight: "900", 
+      color: "#000",
+      textAlign: "center",
+    },
+    loadingContainer: { 
+      flex: 1, 
+      justifyContent: "center", 
+      alignItems: "center",
+      backgroundColor: theme.background || "#f5f7fa",
+    },
+    loadingText: { 
+      marginTop: 16, 
+      color: theme.textSecondary || "#666", 
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    scrollContainer: { 
+      flex: 1,
+      backgroundColor: theme.background || "#f5f7fa",
+    },
+    scrollContent: {
+      padding: 16,
+    },
+    card: {
+      backgroundColor: theme.cardBackground || "#fff",
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: theme.borderColor || "#f0f0f0",
+    },
+    cardHeader: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+    busBadge: {
+      width: 56,
+      height: 40,
+      backgroundColor: theme.secondaryBackground || "#FFF3E0",
+      borderRadius: 10,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 12,
+      borderWidth: 2,
+      borderColor: theme.primary || "#FFB300",
+    },
+    busNumber: {
+      fontSize: 16,
+      fontWeight: "800",
+      color: theme.primaryDark || "#F57C00",
+    },
+    timeContainer: {
+      width: 60,
+      marginRight: 12,
+      justifyContent: "center",
+    },
+    time: {
+      fontSize: 18,
+      fontWeight: "800",
+      color: theme.textPrimary || "#1a1a1a",
+      letterSpacing: 0.5,
+    },
+    routeSection: {
+      flex: 1,
+      justifyContent: "center",
+    },
+    location: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: theme.textPrimary || "#333",
+      lineHeight: 20,
+    },
+    arrowContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: 6,
+    },
+    arrowLine: {
+      flex: 1,
+      height: 2,
+      backgroundColor: theme.primary || "#D4A53A",
+      marginRight: 8,
+      opacity: 0.6,
+    },
+    arrowIcon: {
+      fontSize: 16,
+      color: theme.primary || "#D4A53A",
+      fontWeight: "bold",
+    },
+    expandedSection: {
+      marginTop: 16,
+      paddingTop: 16,
+      borderTopWidth: 2,
+      borderTopColor: theme.borderColor || "#f0f0f0",
+    },
+    routeLabel: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: theme.textSecondary || "#666",
+      marginBottom: 12,
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    chipsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: 4,
+    },
+    chip: {
+      backgroundColor: theme.successBackground || "#E8F5E9",
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      marginRight: 8,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: theme.successBorder || "#C8E6C9",
+    },
+    chipText: {
+      fontSize: 12,
+      color: theme.successText || "#2E7D32",
+      fontWeight: "600",
+    },
+    footer: {
+      marginTop: 14,
+      alignItems: "center",
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderColor || "#f0f0f0",
+    },
+    footerText: {
+      fontSize: 12,
+      color: theme.textSecondary || "#999",
+      fontWeight: "600",
+      fontStyle: "italic",
+    },
+  });
+};
 
 export default BusTimetable;
