@@ -15,7 +15,6 @@ import WebSocketService from "../services/WebSocketService";
 import { useTheme } from "../context/ThemeContext";
 import { useFocusEffect } from "@react-navigation/native";
 
-
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -24,6 +23,7 @@ const ITEM_HEIGHT = 120;
 const DISTANCE_THRESHOLD_METERS = 1000;
 const BUS_ICON_TOP_OFFSET = 16;
 const YELLOW_PROGRESS_COLOR = "#FFD700";
+const SCROLL_DISTANCE_THRESHOLD = 50; // Distance in meters to trigger auto-scroll at stop
 
 // ====== SIMPLIFIED Math - Working Version ======
 
@@ -166,29 +166,30 @@ export default function ScheduleScreen() {
   const [etaCalculated, setEtaCalculated] = useState(false);
   const [reachedStops, setReachedStops] = useState({});
   const [nextStopDistance, setNextStopDistance] = useState(null);
+  const [lastSegmentIndex, setLastSegmentIndex] = useState(0); // Track last segment for auto-scroll
 
   const translateY = useRef(new Animated.Value(BUS_ICON_TOP_OFFSET)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
   const prevSegmentRef = useRef({ index: 0, progress: 0 });
+  const lastScrollSegmentRef = useRef(0); // Track last segment where we auto-scrolled
 
   useFocusEffect(
-  React.useCallback(() => {
-    // Screen is focused → do nothing
-    return () => {
-      // Screen is unfocused (going back)
-      const payload = {
-        driver_id: 1000,
-        route_id: 0,
-        direction: "up",
+    React.useCallback(() => {
+      // Screen is focused → do nothing
+      return () => {
+        // Screen is unfocused (going back)
+        const payload = {
+          driver_id: 1000,
+          route_id: 0,
+          direction: "up",
+        };
+
+        WebSocketService.send(payload);
+        console.log("📤 Sent on ScheduleScreen exit:", payload);
       };
-
-      WebSocketService.send(payload);
-      console.log("📤 Sent on ScheduleScreen exit:", payload);
-    };
-  }, [])
-);
-
+    }, [])
+  );
 
   // Yellow progress line animation values
   const [lineProgress, setLineProgress] = useState(
@@ -284,13 +285,24 @@ export default function ScheduleScreen() {
           // 2. Update YELLOW progress line
           updateYellowProgressLine(segmentInfo.index, segmentInfo.progress);
           
-          // Auto-scroll
-          const targetScrollIndex = Math.max(0, segmentInfo.index - 1);
-          if (flatListRef.current) {
-            flatListRef.current.scrollToOffset({
-              offset: targetScrollIndex * ITEM_HEIGHT,
-              animated: true,
-            });
+          // ✅ MODIFIED: Auto-scroll ONLY when segment index changes (bus reaches a stop)
+          // Check if bus has moved to a new segment AND is close to the stop
+          const isSegmentChanged = prev.index !== segmentInfo.index;
+          const isCloseToStop = segmentInfo.progress > 0.8 || segmentInfo.progress < 0.2;
+          
+          if (isSegmentChanged && flatListRef.current) {
+            // Bus has moved to a new segment (reached a stop)
+            const targetScrollIndex = Math.max(0, segmentInfo.index - 1);
+            
+            // Only scroll if we haven't already scrolled for this segment
+            if (lastScrollSegmentRef.current !== segmentInfo.index) {
+              flatListRef.current.scrollToOffset({
+                offset: targetScrollIndex * ITEM_HEIGHT,
+                animated: true,
+              });
+              lastScrollSegmentRef.current = segmentInfo.index;
+              console.log(`🔄 Auto-scrolled to segment ${segmentInfo.index}`);
+            }
           }
         }
       }
@@ -308,6 +320,22 @@ export default function ScheduleScreen() {
             const distance = getDistance(currentLat, currentLon, nextStopLat, nextStopLon);
             if (!Number.isNaN(distance)) {
               setNextStopDistance(distance);
+              
+              // ✅ ADDED: Auto-scroll when bus is very close to next stop
+              if (distance < SCROLL_DISTANCE_THRESHOLD && flatListRef.current) {
+                const currentStopIndex = Math.min(lastConfirmedStopIndex + 1, stops.length - 1);
+                const targetScrollIndex = Math.max(0, currentStopIndex - 1);
+                
+                // Only scroll if we haven't already scrolled for this stop
+                if (lastScrollSegmentRef.current !== currentStopIndex) {
+                  flatListRef.current.scrollToOffset({
+                    offset: targetScrollIndex * ITEM_HEIGHT,
+                    animated: true,
+                  });
+                  lastScrollSegmentRef.current = currentStopIndex;
+                  console.log(`📍 Auto-scrolled when close to stop ${currentStopIndex}`);
+                }
+              }
             }
           }
         }
@@ -325,6 +353,21 @@ export default function ScheduleScreen() {
           if (calc.latestIndex > lastConfirmedStopIndex) {
             setLastConfirmedStopIndex(calc.latestIndex);
             updateReachedStops(calc.latestIndex);
+            
+            // ✅ ADDED: Auto-scroll when arrival status confirms stop reached
+            if (flatListRef.current) {
+              const targetScrollIndex = Math.max(0, calc.latestIndex);
+              
+              // Only scroll if we haven't already scrolled for this stop
+              if (lastScrollSegmentRef.current !== calc.latestIndex) {
+                flatListRef.current.scrollToOffset({
+                  offset: targetScrollIndex * ITEM_HEIGHT,
+                  animated: true,
+                });
+                lastScrollSegmentRef.current = calc.latestIndex;
+                console.log(`✅ Auto-scrolled on arrival confirmation for stop ${calc.latestIndex}`);
+              }
+            }
           }
         }
       }
