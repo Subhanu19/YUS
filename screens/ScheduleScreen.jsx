@@ -10,11 +10,12 @@ import {
   Easing,
   Dimensions,
 } from "react-native";
+import { StatusBar } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import WebSocketService from "../services/WebSocketService";
 import { useTheme } from "../context/ThemeContext";
 import { useFocusEffect } from "@react-navigation/native";
-
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -399,6 +400,7 @@ export default function ScheduleScreen() {
     return (
       <View style={styles.stopContainer}>
         <View style={styles.timeline}>
+
           {/* BACKGROUND LINE (GRAY) */}
           <View style={[styles.fullLine, { backgroundColor: theme.border }]} />
           
@@ -649,6 +651,12 @@ export default function ScheduleScreen() {
 
   return (
     <View style={styles.container}>
+            {/* STATUS BAR CONFIG */}
+  <StatusBar backgroundColor="#000000" barStyle="light-content" />
+
+  {/*  THIS VIEW FILLS ONLY TOP GAP */}
+  <View style={{ height: StatusBar.currentHeight, backgroundColor: "#000",zIndex:1 }} />
+
       <View style={[styles.headerSection, { backgroundColor: theme.GOLD_START }]}>
         <Text style={styles.title}>{busData.route_name}</Text>
         <Text style={styles.subtitle}>
@@ -685,7 +693,8 @@ export default function ScheduleScreen() {
             ]}
           >
             <View style={[styles.busIconContainer, { backgroundColor: theme.GOLD_START }]}>
-              <Text style={styles.busEmoji}>🚍</Text>
+              {/* <Text style={styles.busEmoji}>🚍</Text> map-marker-radius-outline*/}
+               <MaterialCommunityIcons name="bus-articulated-front" size={30} color="#000"/>
             </View>
           </Animated.View>
         </View>
@@ -694,8 +703,10 @@ export default function ScheduleScreen() {
       <View style={[styles.footer, { borderTopColor: theme.border, backgroundColor: theme.secondary }]}>
     
 
+            
         <Text style={[styles.connectionStatus, { color: theme.textLight }]}>
-          Next stop:{" "}
+            <MaterialCommunityIcons name="map-marker-radius" size={30} color="#000"/>
+            {" "} Next stop:{" "}
           <Text style={{ fontWeight: "700", color: theme.textLight }}>
             {nextInfo.name}
           </Text>
@@ -725,9 +736,9 @@ const createStyles = (theme) =>
       fontWeight: "500" 
     },
     headerSection: {
-      padding: 30,
+      padding: 10,
       zIndex: 100,
-      paddingBottom: 16,
+      paddingBottom: -30,
       borderBottomWidth: 1,
       borderBottomColor: theme.GOLD_START,
     },

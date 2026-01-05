@@ -9,15 +9,11 @@ import {
   Alert,
   Animated,
 } from "react-native";
+import { StatusBar } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
 import WebSocketService from "../services/WebSocketService";
-import Icon from "react-native-vector-icons/Ionicons";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-
 
 // Helper to calculate distance (Haversine formula)
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -64,13 +60,11 @@ export default function BusListScreen() {
 
   // ----- Fetch buses -----
   useEffect(() => {
-    console.log("current buses - ",buses)
+    console.log("current buses - ", buses);
     if (initialBuses && initialBuses.length > 0) {
-      
       setLoading(false);
       return;
     }
-
   }, [actualSource, actualDestination, stop, searchType, busNumber, initialBuses]);
 
   // ----- WebSocket: Real-time updates -----
@@ -137,7 +131,7 @@ export default function BusListScreen() {
     };
 
     WebSocketService.send(payload);
-    
+
     navigation.navigate("Schedule", {
       busObject: bus,
       searchType,
@@ -147,7 +141,8 @@ export default function BusListScreen() {
       stop: searchType === "srcDestStop" ? stop : null,
     });
   };
-const isKCET = (name) => name?.toLowerCase() === "kcet";
+
+  const isKCET = (name) => name?.toLowerCase() === "kcet";
 
   // ----- Render bus card -----
   const renderBusCard = ({ item }) => {
@@ -155,7 +150,7 @@ const isKCET = (name) => name?.toLowerCase() === "kcet";
       <Pressable
         style={({ pressed }) => [
           styles.busCard,
-          pressed && { transform: [{ scale: 0.98 }] }
+          pressed && { transform: [{ scale: 0.98 }] },
         ]}
         onPress={() => handleBusPress(item)}
       >
@@ -163,7 +158,7 @@ const isKCET = (name) => name?.toLowerCase() === "kcet";
         <View style={styles.cardTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
             <Text style={styles.cardBusNumber}>Bus - {item.bus_id}</Text>
-            
+
             <View style={styles.busIconCircle}>
               <MaterialCommunityIcons name="bus" size={32} color="#FFF" />
             </View>
@@ -183,52 +178,57 @@ const isKCET = (name) => name?.toLowerCase() === "kcet";
         <View style={styles.pathRow}>
           <View style={styles.pathGraphic}>
             <View style={styles.iconWithLabel}>
-  {isKCET(item.stops?.[0]?.location_name) ? (
-    <MaterialCommunityIcons
-      name="school"
-      size={40}
-      color={GOLD_START}
-    />
-  ) : (
-    <MaterialCommunityIcons
-      name="bus-stop-uncovered"
-      size={40}
-      color={GOLD_START}
-    />
-  )}
+              {isKCET(item.stops?.[0]?.location_name) ? (
+                <MaterialCommunityIcons
+                  name="school"
+                  size={40}
+                  color={GOLD_START}
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name="bus-stop-uncovered"
+                  size={40}
+                  color={GOLD_START}
+                />
+              )}
 
-  <Text style={styles.stopLabel}>
-    {item.stops?.[0]?.location_name}
-  </Text>
-</View>
-
+              <Text style={styles.stopLabel}>
+                {item.stops?.[0]?.location_name}
+              </Text>
+            </View>
 
             <View style={styles.dottedLine} />
 
-            <MaterialCommunityIcons name="bus-side" size={35} color={GOLD_START}  marginTop="-59"/> 
+            <MaterialCommunityIcons
+              name="bus-side"
+              size={35}
+              color={GOLD_START}
+              marginTop="-59"
+            />
 
             <View style={styles.dottedLine} />
 
             <View style={styles.iconWithLabel}>
-  {isKCET(item.stops?.[item.stops.length - 1]?.location_name) ? (
-    <MaterialCommunityIcons
-      name="school"
-      size={30}
-      color={GOLD_START}
-      style={{ marginTop: 20 }}
-    />
-  ) : <MaterialCommunityIcons
-      name="bus-stop-uncovered"
-      size={30}
-      color={GOLD_START}
-      style={{ marginTop: 10 }}
-    />}
+              {isKCET(item.stops?.[item.stops.length - 1]?.location_name) ? (
+                <MaterialCommunityIcons
+                  name="school"
+                  size={30}
+                  color={GOLD_START}
+                  style={{ marginTop: 20 }}
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name="bus-stop-uncovered"
+                  size={30}
+                  color={GOLD_START}
+                  style={{ marginTop: 10 }}
+                />
+              )}
 
-  <Text style={styles.stopLabel}>
-    {item.stops?.[item.stops.length - 1]?.location_name}
-  </Text>
-</View>
-
+              <Text style={styles.stopLabel}>
+                {item.stops?.[item.stops.length - 1]?.location_name}
+              </Text>
+            </View>
           </View>
         </View>
       </Pressable>
@@ -271,7 +271,31 @@ const isKCET = (name) => name?.toLowerCase() === "kcet";
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.header}>{getHeaderTitle()}</Text>
+        {/* <View style={styles.cleanHeader}>
+          <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textLight }]}>
+            {getSubtitle()}
+          </Text>
+        </View> */}
+        <View style={styles.cleanHeader}>
+  <View style={styles.headerRow}>
+    {/* LEFT BUS ICON */}
+    <View style={styles.headerIcon}>
+      <MaterialCommunityIcons
+        name="bus"
+        size={28}
+        color="#000"
+      />
+    </View>
+
+    {/* CENTER TITLE */}
+    <Text style={styles.headerTitle}>Bus Details</Text>
+
+    {/* RIGHT PLACEHOLDER (keeps title centered) */}
+    <View style={styles.headerIcon} />
+  </View>
+</View>
+
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: theme.textLight }]}>
             {error}
@@ -291,12 +315,33 @@ const isKCET = (name) => name?.toLowerCase() === "kcet";
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerSection}>
-        <Text style={styles.header}>{getHeaderTitle()}</Text>
-        <Text style={[styles.subtitle, { color: theme.textLight }]}>
-          {getSubtitle()}
-        </Text>
-      </View>
+      {/* STATUS BAR CONFIG */}
+      <StatusBar backgroundColor="#000000" barStyle="light-content" />
+
+      {/* THIS VIEW FILLS ONLY TOP GAP */}
+      <View style={{ height: StatusBar.currentHeight, backgroundColor: "#000" }} />
+
+      {/* CLEAN HEADER - NO HAMBURGER, NO LOGO */}
+     <View style={styles.cleanHeader}>
+  <View style={styles.headerRow}>
+    {/* LEFT BUS ICON */}
+    <View style={styles.headerIcon}>
+      <MaterialCommunityIcons
+        name="checkbox-marked-circle-outline"
+        size={30}
+        color="#000"
+      />
+    
+    </View>
+
+    {/* CENTER TITLE */}
+    <Text style={styles.headerTitle}>Alloted Buses</Text>
+
+    {/* RIGHT PLACEHOLDER (keeps title centered) */}
+    <View style={styles.headerIcon} />
+  </View>
+</View>
+
 
       <FlatList
         data={buses}
@@ -323,42 +368,59 @@ const isKCET = (name) => name?.toLowerCase() === "kcet";
 
 const createStyles = (theme) =>
   StyleSheet.create({
-
     container: {
       flex: 1,
       backgroundColor: theme.background,
-      padding: 16,
     },
+    
+    // Clean Header Styles
+    cleanHeader: {
+  backgroundColor: theme.GOLD_START,
+  paddingTop: 6,
+  alignItems: "center",
+  paddingHorizontal: 20,
+  minHeight:60,
+},
+headerRow: {
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
 
-    headerSection: {
-      marginBottom: 20,
-      alignItems: "center",
-    },
+headerIcon: {
+  width: 40,
+  height: 40,
+  justifyContent: "center",
+  alignItems: "center",
+},
 
-    header: {
-      marginTop: 50,
-      fontSize: 24,
-      fontWeight: "800",
-      marginBottom: 8,
-      textAlign: "center",
-      color: theme.GOLD_START,
-    },
+    
+    headerTitle: {
+  fontSize: 26,
+  fontWeight: "800",
+  color: "#000", // or "#111" or theme.secondary
+},
 
-    subtitle: {
-      fontSize: 14,
+    
+    headerSubtle: {
+      fontSize: 15,
       fontWeight: "500",
       textAlign: "center",
+      opacity: 0.9,
     },
 
     listContent: {
-      paddingBottom: 20,
+      paddingHorizontal: 15,
+      paddingBottom: 30,
+      paddingTop:50,
     },
 
     busCard: {
-      backgroundColor:"#fff",
+      backgroundColor: "#fff",
       borderRadius: 30,
       padding: 20,
-      height:200,
+      height: 200,
       marginBottom: 18,
       shadowColor: "#000",
       shadowOpacity: 0.15,
@@ -385,7 +447,7 @@ const createStyles = (theme) =>
       width: 39,
       height: 39,
       borderRadius: 28,
-      backgroundColor: theme.GOLD_START ,
+      backgroundColor: theme.GOLD_START,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -434,7 +496,7 @@ const createStyles = (theme) =>
     iconWithLabel: {
       alignItems: "center",
       justifyContent: "center",
-      marginTop:-42,
+      marginTop: -42,
     },
 
     dottedLine: {
@@ -443,7 +505,7 @@ const createStyles = (theme) =>
       borderStyle: "dashed",
       borderColor: theme.GOLD_START,
       marginHorizontal: -16,
-      marginTop:-45,
+      marginTop: -45,
     },
 
     loader: {
@@ -503,5 +565,6 @@ const createStyles = (theme) =>
       fontSize: 14,
       fontWeight: "400",
     },
-
   });
+
+

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Pressable
 } from 'react-native';
+import { StatusBar } from "react-native";
 // Import your theme (assuming same structure as SearchScreen)
 import LightTheme from "../constants/Colours";
 
@@ -86,9 +87,16 @@ const BusTimetable = ({ route }) => {
 
   return (
     <View style={styles.container}>
+      
+  {/* STATUS BAR CONFIG */}
+  <StatusBar backgroundColor="#000000" barStyle="light-content" />
+
+  {/*  THIS VIEW FILLS ONLY TOP GAP */}
+  <View style={{ height: StatusBar.currentHeight, backgroundColor: "#000" }} />
       <View style={styles.header}>
         <Text style={styles.title}>Bus Trips</Text>
       </View>
+
 
       <ScrollView 
         style={styles.scrollContainer}
@@ -162,7 +170,7 @@ const createStyles = (theme) => {
       backgroundColor: theme.background || "#f5f7fa"
     },
     header: {
-      backgroundColor: theme.cardBackground || "#fff",
+      backgroundColor: theme.GOLD_START || "#fff",
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,

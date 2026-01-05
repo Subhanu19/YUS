@@ -1,5 +1,5 @@
 // SearchScreen.jsx - Updated with Option 3 (Best Approach)
-import React, { useState, useEffect, useRef, act } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
   Animated,
   Modal,
   Dimensions,
+  Image
 } from "react-native";
+import { StatusBar } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import LightTheme from "../constants/Colours";
 import webSocketService from "../services/WebSocketService";
@@ -21,6 +23,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 
 
@@ -168,7 +171,24 @@ export default function SearchScreen() {
     }).start(() => setDrawerVisible(false));
   };
 
-  // ✅ UPDATED: Render drawer with optimized timetable navigation
+  // Hamburger Menu Component (unchanged)
+  const AnimatedHamburger = ({ onPress, style, isOpen }) => {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        style={[styles.hamburgerButton, style]}
+      >
+        <Ionicons
+          name={isOpen ? "close" : "menu"}
+          size={28}
+          color="#000"
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  // ✅ UPDATED: Render drawer with X icon inside drawer when open
   const renderDrawer = () => (
     <Modal
       visible={drawerVisible}
@@ -195,12 +215,14 @@ export default function SearchScreen() {
             {/* Header */}
             <View style={styles.drawerHeader}>
               <View style={styles.logoContainer}>
-                <View style={styles.logoCircle}>
-                  <Ionicons name="bus" size={40} color="#D4A53A" />
-                </View>
+                
+                 <Image
+  source={require("../assets/logo.png")}   
+  style={styles.drawerLogo}
+/>
+
               </View>
               <Text style={styles.drawerAppName}>YELLOH BUS</Text>
-              <Text style={styles.drawerVersion}>v 1.0.0</Text>
             </View>
 
             {/* Menu */}
@@ -262,94 +284,28 @@ export default function SearchScreen() {
 
             {/* Footer */}
             <View style={styles.drawerFooter}>
-              <Text style={styles.drawerFooterText}>Made with 💬 for better commute</Text>
+              <Text style={styles.drawerFooterText}>Made with 💛 </Text>
             </View>
           </View>
         </Animated.View>
         
-        <AnimatedHamburger
-          onPress={closeDrawer}
-          isOpen={drawerVisible}
-          style={{
-            position: "absolute",
-            top: 40,
-            left: 20,
-            zIndex: 9999,
-            elevation: 9999,
-          }}
-        />
+        {/* ✅ ADDED: X icon inside the drawer (only visible when drawer is open) */}
+        {drawerVisible && (
+          <AnimatedHamburger
+            onPress={closeDrawer}
+            isOpen={true}
+            style={{
+              position: "absolute",
+              top: 20,
+              left: 20,
+              zIndex: 9999,
+              elevation: 9999,
+            }}
+          />
+        )}
       </View>
     </Modal>
   );
-
-  // Hamburger Menu Component (unchanged)
-  const AnimatedHamburger = ({ onPress, isOpen, style }) => {
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-    const bar2Scale = useRef(new Animated.Value(1)).current;
-
-    useEffect(() => {
-      const toValue = isOpen ? 1 : 0;
-
-      Animated.parallel([
-        Animated.timing(rotateAnim, {
-          toValue,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bar2Scale, {
-          toValue: isOpen ? 0 : 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, [isOpen]);
-
-    const rotation = rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["0deg", "180deg"],
-    });
-
-    const bar1Rotate = rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["0deg", "45deg"],
-    });
-
-    const bar3Rotate = rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["0deg", "-45deg"],
-    });
-
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.8}
-        style={[styles.hamburgerButton, style]}
-      >
-        <Animated.View style={[styles.toggle, { transform: [{ rotate: rotation }] }]}>
-          <Animated.View
-            style={[
-              styles.bar,
-              styles.barSmall,
-              { transform: [{ rotate: bar1Rotate }] },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.bar,
-              { transform: [{ scaleX: bar2Scale }] },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.bar,
-              styles.barSmall,
-              { transform: [{ rotate: bar3Rotate }] },
-            ]}
-          />
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  };
 
   // Suggestion handlers
   const handleSourceSuggestion = (text) => {
@@ -484,12 +440,17 @@ export default function SearchScreen() {
     }
   };
 
+  // ✅ UPDATED: Header hamburger - ONLY when drawer is closed
   const renderHeader = () => (
-    <View style={styles.headerSection}>
-      <AnimatedHamburger 
-        onPress={drawerVisible ? closeDrawer : openDrawer}
-        isOpen={drawerVisible}
-      />
+    <View style={[styles.headerSection,  { backgroundColor: theme.GOLD_START }]}>
+      {/* Show hamburger menu icon ONLY when drawer is closed */}
+      {!drawerVisible && (
+        <AnimatedHamburger 
+          onPress={openDrawer}
+          isOpen={false}
+        />
+      )}
+      
       <View style={styles.headerTitleContainer}>
         <Text style={styles.headerTitle}>YELLOH BUS</Text>
       </View>
@@ -498,7 +459,7 @@ export default function SearchScreen() {
 
   const renderSearchTypeSelector = () => (
     <View style={styles.searchTypeSection}>
-      <View style={{ marginTop: 40 }} />
+      <View style={{ marginTop: -20 }} />
       <Text style={styles.sectionLabel}>Choose Search Method</Text>
       
       {/* Animated Radio Switch Container */}
@@ -567,7 +528,7 @@ export default function SearchScreen() {
         style={{
           backgroundColor: "#ffffff",
           padding: 15,
-          borderRadius: 22,
+          borderRadius: 16,
           shadowColor: "#000",
           shadowOpacity: 0.08,
           shadowRadius: 12,
@@ -599,8 +560,8 @@ export default function SearchScreen() {
           style={{
             borderWidth: 3,
             borderColor: "#e6b645",
-            borderRadius: 15,
-            paddingVertical: 19,
+            borderRadius: 18,
+            paddingVertical: 8,
             alignItems: "center",
             backgroundColor: "#fff",
             marginBottom: 10,
@@ -623,23 +584,25 @@ export default function SearchScreen() {
             maxLength={4}
           />
         </View>
-
+        
         <Text style={{ textAlign: "center", color: "#888", fontSize: 10 }}>
-          ENTER BUS NUMBER
+          Enter Bus Number
         </Text>
       </View>
      {renderSearchButton()}
     </View>
+
+  
   );
 
   const renderSearchBySourceDest = () => (
-    <View style={{ marginBottom: 20, position: "relative", zIndex: 1 }}>
+    <View style={{ marginBottom: 100, position: "relative", zIndex: 1 }}>
       {/* CARD */}
       <View
         style={{
           backgroundColor: "#ffffff",
           padding: 15,
-          borderRadius: 22,
+          borderRadius: 16,
           shadowColor: "#000",
           shadowOpacity: 0.08,
           shadowRadius: 12,
@@ -651,7 +614,7 @@ export default function SearchScreen() {
         }}
       >
         {/* Header */}
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
           <View
             style={{
               height: 48,
@@ -666,8 +629,8 @@ export default function SearchScreen() {
           </View>
 
           <View style={{ marginLeft: 12 }}>
-            <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>Plan Your Journey</Text>
-            <Text style={{ fontSize: 12, color: "#777" }}>Find buses by route</Text>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>Find Route Bus</Text>
+            <Text style={{ fontSize: 12, color: "#777" }}>Track by bus route</Text>
           </View>
         </View>
 
@@ -681,7 +644,7 @@ export default function SearchScreen() {
                 borderWidth: 3,
                 borderColor: "#e6b645",
                 borderRadius: 18,
-                paddingVertical: 16,
+                paddingVertical: 10,
                 paddingHorizontal: 14,
                 backgroundColor: "#fff",
               }}
@@ -734,8 +697,8 @@ export default function SearchScreen() {
           </View>
 
           {/* ARROW */}
-          <View style={{ width: 50, height: 125, justifyContent: "center", alignItems: "center" }}>
-            <Text style={{ fontSize: 34, fontWeight: "900", color: "#444", marginTop: -5 }}>
+          <View style={{ width: 50, height: 100, justifyContent: "center", alignItems: "center" }}>
+            <Text style={{ fontSize: 34, fontWeight: "900", color: "#444", marginTop: 20 }}>
               {">>"}
             </Text>
           </View>
@@ -748,7 +711,7 @@ export default function SearchScreen() {
                 borderWidth: 3,
                 borderColor: "#e6b645",
                 borderRadius: 18,
-                paddingVertical: 16,
+                paddingVertical: 10,
                 paddingHorizontal: 14,
                 backgroundColor: "#fff",
               }}
@@ -806,7 +769,7 @@ export default function SearchScreen() {
       <Animated.View
         style={{
           transform: [{ scale: buttonScale }],
-          marginTop: 20,
+          marginTop: 10,
           zIndex: -1,
         }}
       >
@@ -821,8 +784,12 @@ export default function SearchScreen() {
             colors={["#f3c156ff", "#f1b21a"]}
             style={styles.searchButtonGradient}
           >
-            <Text style={styles.searchButtonText}>Find Buses</Text>
-            <Ionicons name="rocket" size={18} color="#000" style={{ marginLeft: 8 }} />
+            <Text style={styles.searchButtonText}>Find Bus</Text>
+            {/* <MaterialCommunityIcons name="bus-stop" color="#000" size={25} style={{ marginLeft: 2 }}  />
+            <MaterialCommunityIcons name="bus" size={25} color="#000" style={{ marginLeft: 2 }} /> */}
+            <MaterialCommunityIcons name="bus-side" color="#000" size={25} style={{ marginLeft: 2 }} />
+            {/* <MaterialCommunityIcons name="bus-marker" color="#000" size={25}  style={{ marginLeft: 2 }}/> */}
+             {/* <MaterialCommunityIcons name="bus-electric" color="#000" size={24} /> */}
           </LinearGradient>
         </TouchableOpacity>
       </Animated.View>
@@ -842,26 +809,42 @@ export default function SearchScreen() {
           colors={["#f3c156ff", "#f1b21a"]}
           style={styles.searchButtonGradient}
         >
-          <Text style={styles.searchButtonText}>Find Buses</Text>
-          <Ionicons name="rocket" size={18} color="#000" style={{ marginLeft: 8 }} />
+          <Text style={styles.searchButtonText}>Find Bus</Text>
+           <MaterialCommunityIcons name="bus-side" color="#000" size={25} style={{ marginLeft: 2 }} />
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   );
 
-  return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      {renderDrawer()}
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {renderHeader()}
-        {renderSearchTypeSelector()}
-        <View style={{ marginBottom: 30 }}>
-          {searchType === "busNo" && renderSearchByBusNumber()}
-          {searchType === "srcDest" && renderSearchBySourceDest()}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
+return (
+  <KeyboardAvoidingView
+  style={styles.container}
+  behavior={Platform.OS === "ios" ? "padding" : undefined}
+>
+  {/* STATUS BAR CONFIG */}
+  <StatusBar backgroundColor="#000000" barStyle="light-content" />
+
+  {/*  THIS VIEW FILLS ONLY TOP GAP */}
+  <View style={{ height: StatusBar.currentHeight, backgroundColor: "#000" }} />
+
+  {renderDrawer()}
+
+  <ScrollView
+    contentContainerStyle={styles.scrollContainer}
+    showsVerticalScrollIndicator={false}
+  >
+    {renderHeader()}
+    {renderSearchTypeSelector()}
+
+    <View style={{ marginBottom: 30 }}>
+      {searchType === "busNo" && renderSearchByBusNumber()}
+      {searchType === "srcDest" && renderSearchBySourceDest()}
+    </View>
+  </ScrollView>
+</KeyboardAvoidingView>
+
+);
+
 }
 
 const createStyles = (theme) => {
@@ -875,6 +858,7 @@ const createStyles = (theme) => {
     container: {
       flex: 1,
       backgroundColor: theme.background,
+
     },
     scrollContainer: {
       flexGrow: 1,
@@ -882,29 +866,28 @@ const createStyles = (theme) => {
       paddingTop: 60,
     },
     headerSection: {
-      marginBottom: 26,
+      marginTop:-60,
+      marginBottom: 40,
       flexDirection: 'row',
       alignItems: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 15,
+      paddingHorizontal: 20,
       justifyContent: 'space-between',
-      zIndex: 9999,
+      zIndex: 100,
       elevation: 15,
       position: "relative",
+      marginRight:-20,
+      marginLeft:-20
     },
     hamburgerButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      zIndex: 99999,
-      elevation: 20,
-      position: "absolute", 
-    },
+  padding: 15,              // touch area safe
+  zIndex: 99999,
+  elevation: 20,
+  position: "absolute",
+},
+
     toggle: {
       width: 40,
       height: 40,
@@ -928,7 +911,7 @@ const createStyles = (theme) => {
     headerTitle: {
       fontSize: 24,
       fontWeight: '900',
-      color: '#D4A53A',
+      color: '#000',
       textAlign: "left",
     },
     // Drawer Styles 
@@ -952,6 +935,13 @@ const createStyles = (theme) => {
       zIndex: 2,
       elevation: 2,
     },
+  drawerLogo: {
+  width: 140,
+  height: 70,
+  resizeMode: "contain",
+},
+
+
     drawerContent: {
       flex: 1,
       backgroundColor: '#fff',
@@ -964,22 +954,8 @@ const createStyles = (theme) => {
       borderBottomColor: '#E0E0E0',
     },
     logoContainer: {
-      marginBottom: 16,
-    },
-    logoCircle: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 3,
-      borderColor: '#D4A53A',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      marginBottom: 12,
+       alignItems: "center",
     },
     drawerAppName: {
       fontSize: 28,
@@ -1095,8 +1071,8 @@ const createStyles = (theme) => {
       zIndex: 1,
       borderRadius: 28,
       overflow: "visible",
-      marginTop: 14,
-      marginBottom: 28,
+      marginTop: 20,
+      marginBottom: 8,
       alignSelf: "center",
       width: "100%",
       maxWidth: 420,
