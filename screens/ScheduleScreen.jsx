@@ -693,8 +693,11 @@ export default function ScheduleScreen() {
             ]}
           >
             <View style={[styles.busIconContainer, { backgroundColor: theme.GOLD_START }]}>
-              {/* <Text style={styles.busEmoji}>🚍</Text> map-marker-radius-outline*/}
-               <MaterialCommunityIcons name="bus-articulated-front" size={30} color="#000"/>
+              <Text ><MaterialCommunityIcons name="bus" color="#000" size={24} /></Text> 
+              
+              
+
+               
             </View>
           </Animated.View>
         </View>

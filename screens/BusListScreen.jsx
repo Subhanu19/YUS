@@ -155,78 +155,91 @@ export default function BusListScreen() {
         onPress={() => handleBusPress(item)}
       >
         {/* Header Row */}
-        <View style={styles.cardTopRow}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
-            <Text style={styles.cardBusNumber}>Bus - {item.bus_id}</Text>
+<View style={styles.cardTopRow}>
 
-            <View style={styles.busIconCircle}>
-              <MaterialCommunityIcons name="bus" size={32} color="#FFF" />
-            </View>
-          </View>
+  {/* LEFT GROUP */}
+  <View style={styles.busHeaderLeft}>
+    <View style={styles.busIconCircle}>
+      <MaterialCommunityIcons name="bus" size={22} color="#FFF" />
+    </View>
 
-          <View style={styles.stopPill}>
-            <Text style={styles.stopPillText}>
-              {item.stops?.length || 0} stops
-            </Text>
-          </View>
-        </View>
+    <Text style={styles.cardBusNumber}>
+      Bus - {item.bus_id}
+    </Text>
+  </View>
+
+  {/* RIGHT GROUP */}
+  <View style={styles.stopPill}>
+    <Text style={styles.stopPillText}>
+      {item.stops?.length || 0} stops
+    </Text>
+  </View>
+
+</View>
+
 
         {/* Route Title */}
         <Text style={styles.cardRouteTitle}>{item.route_name}</Text>
 
-        {/* Path Row */}
+        {/* Path Row - FIXED ALIGNMENT */}
         <View style={styles.pathRow}>
           <View style={styles.pathGraphic}>
-            <View style={styles.iconWithLabel}>
+            {/* START STOP */}
+            <View style={styles.stopContainer}>
               {isKCET(item.stops?.[0]?.location_name) ? (
                 <MaterialCommunityIcons
                   name="school"
-                  size={40}
+                  size={32}
                   color={GOLD_START}
                 />
               ) : (
                 <MaterialCommunityIcons
                   name="bus-stop-uncovered"
-                  size={40}
+                  size={34}
                   color={GOLD_START}
                 />
               )}
-
-              <Text style={styles.stopLabel}>
-                {item.stops?.[0]?.location_name}
+              <Text style={styles.stopLabel} numberOfLines={1}>
+                {item.stops?.[0]?.location_name || "Start"}
               </Text>
             </View>
 
-            <View style={styles.dottedLine} />
+            {/* DOTTED LINE */}
+            <View style={styles.lineContainer}>
+              <View style={styles.dottedLine} />
+            </View>
 
-            <MaterialCommunityIcons
-              name="bus-side"
-              size={35}
-              color={GOLD_START}
-              marginTop="-59"
-            />
+            {/* BUS ICON */}
+            <View style={styles.busContainer}>
+              <MaterialCommunityIcons
+                name="bus-side"
+                size={32}
+                color={GOLD_START}
+              />
+            </View>
 
-            <View style={styles.dottedLine} />
+            {/* DOTTED LINE */}
+            <View style={styles.lineContainer}>
+              <View style={styles.dottedLine} />
+            </View>
 
-            <View style={styles.iconWithLabel}>
+            {/* END STOP */}
+            <View style={styles.stopContainer}>
               {isKCET(item.stops?.[item.stops.length - 1]?.location_name) ? (
                 <MaterialCommunityIcons
                   name="school"
-                  size={30}
+                  size={32}
                   color={GOLD_START}
-                  style={{ marginTop: 20 }}
                 />
               ) : (
                 <MaterialCommunityIcons
                   name="bus-stop-uncovered"
-                  size={30}
+                  size={32}
                   color={GOLD_START}
-                  style={{ marginTop: 10 }}
                 />
               )}
-
-              <Text style={styles.stopLabel}>
-                {item.stops?.[item.stops.length - 1]?.location_name}
+              <Text style={styles.stopLabel} numberOfLines={1}>
+                {item.stops?.[item.stops.length - 1]?.location_name || "End"}
               </Text>
             </View>
           </View>
@@ -271,30 +284,19 @@ export default function BusListScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        {/* <View style={styles.cleanHeader}>
-          <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
-          <Text style={[styles.headerSubtitle, { color: theme.textLight }]}>
-            {getSubtitle()}
-          </Text>
-        </View> */}
         <View style={styles.cleanHeader}>
-  <View style={styles.headerRow}>
-    {/* LEFT BUS ICON */}
-    <View style={styles.headerIcon}>
-      <MaterialCommunityIcons
-        name="bus"
-        size={28}
-        color="#000"
-      />
-    </View>
-
-    {/* CENTER TITLE */}
-    <Text style={styles.headerTitle}>Bus Details</Text>
-
-    {/* RIGHT PLACEHOLDER (keeps title centered) */}
-    <View style={styles.headerIcon} />
-  </View>
-</View>
+          <View style={styles.headerRow}>
+            <View style={styles.headerIcon}>
+              <MaterialCommunityIcons
+                name="bus"
+                size={28}
+                color="#000"
+              />
+            </View>
+            <Text style={styles.headerTitle}>Bus Details</Text>
+            <View style={styles.headerIcon} />
+          </View>
+        </View>
 
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: theme.textLight }]}>
@@ -321,27 +323,20 @@ export default function BusListScreen() {
       {/* THIS VIEW FILLS ONLY TOP GAP */}
       <View style={{ height: StatusBar.currentHeight, backgroundColor: "#000" }} />
 
-      {/* CLEAN HEADER - NO HAMBURGER, NO LOGO */}
-     <View style={styles.cleanHeader}>
-  <View style={styles.headerRow}>
-    {/* LEFT BUS ICON */}
-    <View style={styles.headerIcon}>
-      <MaterialCommunityIcons
-        name="checkbox-marked-circle-outline"
-        size={30}
-        color="#000"
-      />
-    
-    </View>
-
-    {/* CENTER TITLE */}
-    <Text style={styles.headerTitle}>Alloted Buses</Text>
-
-    {/* RIGHT PLACEHOLDER (keeps title centered) */}
-    <View style={styles.headerIcon} />
-  </View>
-</View>
-
+      {/* CLEAN HEADER */}
+      <View style={styles.cleanHeader}>
+        <View style={styles.headerRow}>
+          <View style={styles.headerIcon}>
+            <MaterialCommunityIcons
+              name="checkbox-marked-circle-outline"
+              size={30}
+              color="#000"
+            />
+          </View>
+          <Text style={styles.headerTitle}>Alloted Buses</Text>
+          <View style={styles.headerIcon} />
+        </View>
+      </View>
 
       <FlatList
         data={buses}
@@ -375,34 +370,29 @@ const createStyles = (theme) =>
     
     // Clean Header Styles
     cleanHeader: {
-  backgroundColor: theme.GOLD_START,
-  paddingTop: 6,
-  alignItems: "center",
-  paddingHorizontal: 20,
-  minHeight:60,
-},
-headerRow: {
-  width: "100%",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
-
-headerIcon: {
-  width: 40,
-  height: 40,
-  justifyContent: "center",
-  alignItems: "center",
-},
-
-    
+      backgroundColor: theme.GOLD_START,
+      paddingTop: 6,
+      alignItems: "center",
+      paddingHorizontal: 20,
+      minHeight: 60,
+    },
+    headerRow: {
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    headerIcon: {
+      width: 40,
+      height: 40,
+      justifyContent: "center",
+      alignItems: "center",
+    },
     headerTitle: {
-  fontSize: 26,
-  fontWeight: "800",
-  color: "#000", // or "#111" or theme.secondary
-},
-
-    
+      fontSize: 26,
+      fontWeight: "800",
+      color: "#000",
+    },
     headerSubtle: {
       fontSize: 15,
       fontWeight: "500",
@@ -413,14 +403,14 @@ headerIcon: {
     listContent: {
       paddingHorizontal: 15,
       paddingBottom: 30,
-      paddingTop:50,
+      paddingTop: 50,
     },
 
     busCard: {
       backgroundColor: "#fff",
       borderRadius: 30,
-      padding: 20,
-      height: 200,
+      padding: 16,
+      height: 165,
       marginBottom: 18,
       shadowColor: "#000",
       shadowOpacity: 0.15,
@@ -429,19 +419,17 @@ headerIcon: {
       elevation: 8,
     },
 
-    cardTopRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 15,
-    },
+   cardTopRow: {
+  flexDirection: "row",
+  alignItems: "center",
+},
 
-    cardBusNumber: {
-      fontSize: 22,
-      fontWeight: "900",
-      color: "#000",
-      letterSpacing: -1,
-    },
+  cardBusNumber: {
+  fontSize: 22,
+  fontWeight: "900",
+  color: "#000",
+  letterSpacing: -1,
+},
 
     busIconCircle: {
       width: 39,
@@ -452,12 +440,13 @@ headerIcon: {
       alignItems: "center",
     },
 
-    stopPill: {
-      backgroundColor: "#E8DCC8",
-      paddingHorizontal: 24,
-      paddingVertical: 10,
-      borderRadius: 25,
-    },
+   stopPill: {
+  marginLeft: "auto",   // 🔥 PUSHES pill to right
+  backgroundColor: "#E8DCC8",
+  paddingHorizontal: 24,
+  paddingVertical: 10,
+  borderRadius: 25,
+},
 
     stopPillText: {
       fontSize: 15,
@@ -469,43 +458,55 @@ headerIcon: {
       fontSize: 15,
       fontWeight: "700",
       color: "#000",
-      marginBottom: 30,
-      marginTop: -5,
+      marginBottom: 8,
+      marginTop: 8,
       textAlign: "left",
     },
 
     pathRow: {
-      marginTop: 15,
+      marginTop: 5,
     },
 
-    stopLabel: {
-      fontSize: 16,
-      fontWeight: "700",
-      color: "#000",
-      marginTop: 8,
-      textAlign: "center",
-    },
-
+    // FIXED PATH GRAPHIC ALIGNMENT
     pathGraphic: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginVertical: 10,
+      height: 48,
     },
 
-    iconWithLabel: {
+    stopContainer: {
+      width: 70,
       alignItems: "center",
       justifyContent: "center",
-      marginTop: -42,
+    },
+
+    lineContainer: {
+      flex: 1,
+      height: 2,
+      justifyContent: "center",
+      marginHorizontal: 1,
     },
 
     dottedLine: {
-      flex: 10,
+      height: 4,
       borderBottomWidth: 2,
       borderStyle: "dashed",
       borderColor: theme.GOLD_START,
-      marginHorizontal: -16,
-      marginTop: -45,
+    },
+
+    busContainer: {
+      width: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    stopLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: "#000",
+      marginTop: 4,
+      textAlign: "center",
     },
 
     loader: {
@@ -565,6 +566,12 @@ headerIcon: {
       fontSize: 14,
       fontWeight: "400",
     },
+
+   busHeaderLeft: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 10,
+  flexShrink: 1,     // 🔥 IMPORTANT
+},
+
   });
-
-

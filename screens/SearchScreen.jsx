@@ -24,6 +24,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { Linking } from "react-native";
+
 
 
 
@@ -232,7 +234,7 @@ export default function SearchScreen() {
                 style={styles.drawerMenuItem} 
                 onPress={() => {
                   closeDrawer();
-                  navigation.navigate("Home");
+                  navigation.navigate("Search");
                 }}
               >
                 <Ionicons name="home-outline" size={24} color="#333" />
@@ -256,30 +258,45 @@ export default function SearchScreen() {
                 <Text style={styles.drawerMenuText}>Timetable</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.drawerMenuItem} onPress={closeDrawer}>
-                <Ionicons name="settings-outline" size={24} color="#333" />
-                <Text style={styles.drawerMenuText}>Settings</Text>
-              </TouchableOpacity>
+              <TouchableOpacity 
+  style={styles.drawerMenuItem} 
+  onPress={() => {
+    closeDrawer();
+    Linking.openURL(
+  "mailto:yusofficialteam@gmail.com?subject=YUS App Support&body=Hi YUS Team,%0A%0AI need help with..."
+);
 
-              <TouchableOpacity style={styles.drawerMenuItem} onPress={closeDrawer}>
-                <Ionicons name="help-circle-outline" size={24} color="#333" />
-                <Text style={styles.drawerMenuText}>Help & Support</Text>
-              </TouchableOpacity>
+  }}
+>
+  <Ionicons name="help-circle-outline" size={24} color="#333" />
+  <Text style={styles.drawerMenuText}>Help & Support</Text>
+</TouchableOpacity>
 
-              <TouchableOpacity style={styles.drawerMenuItem} onPress={closeDrawer}>
-                <Ionicons name="information-circle-outline" size={24} color="#333" />
-                <Text style={styles.drawerMenuText}>About</Text>
-              </TouchableOpacity>
+<TouchableOpacity 
+  style={styles.drawerMenuItem} 
+  onPress={() => {
+    closeDrawer();
+    Linking.openURL("https://yus.kwscloud.in");
+  }}
+>
+  <Ionicons name="information-circle-outline" size={24} color="#333" />
+  <Text style={styles.drawerMenuText}>About</Text>
+</TouchableOpacity>
 
-              <TouchableOpacity style={styles.drawerMenuItem} onPress={closeDrawer}>
-                <Ionicons name="share-social-outline" size={24} color="#333" />
-                <Text style={styles.drawerMenuText}>Share App</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity style={styles.drawerMenuItem} onPress={closeDrawer}>
-                <Ionicons name="trash-outline" size={24} color="#333" />
-                <Text style={styles.drawerMenuText}>Clear Recent Searches</Text>
-              </TouchableOpacity>
+              <TouchableOpacity
+  style={styles.drawerMenuItem}
+  onPress={() => {
+    closeDrawer();
+    Linking.openURL("https://jack-san-145.github.io/yus-privacy-policy/");
+  }}
+>
+  <Ionicons name="document-text-outline" size={24} color="#333" />
+  <Text style={styles.drawerMenuText}>Privacy Policy</Text>
+</TouchableOpacity>
+
+
+
             </View>
 
             {/* Footer */}
@@ -289,20 +306,7 @@ export default function SearchScreen() {
           </View>
         </Animated.View>
         
-        {/* ✅ ADDED: X icon inside the drawer (only visible when drawer is open) */}
-        {drawerVisible && (
-          <AnimatedHamburger
-            onPress={closeDrawer}
-            isOpen={true}
-            style={{
-              position: "absolute",
-              top: 20,
-              left: 20,
-              zIndex: 9999,
-              elevation: 9999,
-            }}
-          />
-        )}
+        
       </View>
     </Modal>
   );
@@ -435,27 +439,26 @@ export default function SearchScreen() {
         });
       }
     } catch (error) {
-      console.log("error - ",error);
       Alert.alert("Error", "Failed to search for buses. Please try again.");
     }
   };
 
   // ✅ UPDATED: Header hamburger - ONLY when drawer is closed
   const renderHeader = () => (
-    <View style={[styles.headerSection,  { backgroundColor: theme.GOLD_START }]}>
-      {/* Show hamburger menu icon ONLY when drawer is closed */}
-      {!drawerVisible && (
-        <AnimatedHamburger 
-          onPress={openDrawer}
-          isOpen={false}
-        />
-      )}
-      
-      <View style={styles.headerTitleContainer}>
-        <Text style={styles.headerTitle}>YELLOH BUS</Text>
-      </View>
+  <View style={[styles.headerSection, { backgroundColor: theme.GOLD_START }]}>
+    
+    {/* SAME POSITION – ICON CHANGES */}
+    <AnimatedHamburger 
+      onPress={drawerVisible ? closeDrawer : openDrawer}
+      isOpen={drawerVisible}
+    />
+
+    <View style={styles.headerTitleContainer}>
+      <Text style={styles.headerTitle}>YELLOH BUS</Text>
     </View>
-  );
+  </View>
+);
+
 
   const renderSearchTypeSelector = () => (
     <View style={styles.searchTypeSection}>
