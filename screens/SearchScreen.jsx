@@ -263,7 +263,7 @@ export default function SearchScreen() {
   onPress={() => {
     closeDrawer();
     Linking.openURL(
-  "mailto:yusofficialteam@gmail.com?subject=YUS App Support&body=Hi YUS Team,%0A%0AI need help with..."
+  "mailto:yusofficialteam@gmail.com?subject=YUS Support&body=Hi YUS Team,%0A%0AI need help with..."
 );
 
   }}
@@ -288,7 +288,7 @@ export default function SearchScreen() {
   style={styles.drawerMenuItem}
   onPress={() => {
     closeDrawer();
-    Linking.openURL("https://jack-san-145.github.io/yus-privacy-policy/");
+    Linking.openURL("https://yus.kwscloud.in/yus/privacy-policy");
   }}
 >
   <Ionicons name="document-text-outline" size={24} color="#333" />
@@ -301,7 +301,7 @@ export default function SearchScreen() {
 
             {/* Footer */}
             <View style={styles.drawerFooter}>
-              <Text style={styles.drawerFooterText}>Made with 💛 </Text>
+              <Text style={styles.drawerFooterText}>Powered by YUS💛 </Text>
             </View>
           </View>
         </Animated.View>
@@ -833,9 +833,12 @@ return (
   {renderDrawer()}
 
   <ScrollView
-    contentContainerStyle={styles.scrollContainer}
-    showsVerticalScrollIndicator={false}
-  >
+  contentContainerStyle={styles.scrollContainer}
+  showsVerticalScrollIndicator={false}
+  keyboardShouldPersistTaps="handled"
+  keyboardDismissMode="on-drag"
+>
+
     {renderHeader()}
     {renderSearchTypeSelector()}
 
