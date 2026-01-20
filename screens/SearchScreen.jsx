@@ -632,7 +632,7 @@ export default function SearchScreen() {
           </View>
 
           <View style={{ marginLeft: 12 }}>
-            <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>Find Route Bus</Text>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: "#000" }}>Find Bus Route</Text>
             <Text style={{ fontSize: 12, color: "#777" }}>Track by bus route</Text>
           </View>
         </View>
